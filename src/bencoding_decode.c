@@ -8,10 +8,10 @@
 
 #define MAX_RECURSION 16
 
-static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value);
+static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end);
 
-static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value, char** extracted_str) {
-  unsigned long str_length, actual_length;
+static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value, char* value_end, char** extracted_str) {
+  unsigned long str_length;
   char* str_value;
 
   if (sscanf(value, "%lu:", &str_length) == 0) {
@@ -26,8 +26,7 @@ static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value
   }
   value++;
 
-  actual_length = strlen(value);
-  if (str_length > actual_length) {
+  if (str_length > (value_end - value)) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: defined str length is greater than actual length");
     return 0;
   }
@@ -58,7 +57,7 @@ static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value
   return value;
 }
 
-static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value) {
+static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
   char* key = 0;
   dtorr_node* node = 0;
   dtorr_hashmap* map = hashmap_init(256);
@@ -81,7 +80,7 @@ static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* 
     }
 
     if (key == 0) {
-      value = handle_str(config, 0, value, &key);
+      value = handle_str(config, 0, value, value_end, &key);
       dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: processed key string %s", key);
       if (value == 0 || key == 0) {
         return 0;
@@ -102,7 +101,7 @@ static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* 
 
       dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: inserted dict key \"%s\"", key);
     } else {
-      value = decode_helper(config, level + 1, node, value);
+      value = decode_helper(config, level + 1, node, value, value_end);
       if (value == 0) {
         return 0;
       }
@@ -115,7 +114,7 @@ static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* 
   return value + 1;
 }
 
-static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value) {
+static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
   unsigned long size = 256;
   dtorr_node** list = (dtorr_node**)malloc(sizeof(dtorr_node*) * size);
   dtorr_node* element;
@@ -155,7 +154,7 @@ static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* 
       curr_node->value = list;
     }
     list[curr_node->len++] = element;
-    value = decode_helper(config, level + 1, element, value);
+    value = decode_helper(config, level + 1, element, value, value_end);
     if (value == 0) {
       return 0;
     }
@@ -197,20 +196,20 @@ static char* handle_num(dtorr_config* config, dtorr_node* curr_node, char* value
   return value;
 }
 
-static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value) {
+static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
   if (level > MAX_RECURSION) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: max recursion reached");
     return 0;
   }
   char c = value[0];
   if (c == 'd') {
-    value = handle_dict(config, level, curr_node, value + 1);
+    value = handle_dict(config, level, curr_node, value + 1, value_end);
   } else if (c == 'i') {
     value = handle_num(config, curr_node, value + 1);
   } else if (c == 'l') {
-    value = handle_list(config, level, curr_node, value + 1);
+    value = handle_list(config, level, curr_node, value + 1, value_end);
   } else if (c >= '0' && c <= '9') {
-    value = handle_str(config, curr_node, value, 0);
+    value = handle_str(config, curr_node, value, value_end, 0);
   } else {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: invalid node heading");
     return 0;
@@ -218,7 +217,8 @@ static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node
   return value;
 }
 
-dtorr_node* bencoding_decode(dtorr_config* config, char* value) {
+dtorr_node* bencoding_decode(dtorr_config* config, char* value, unsigned long value_len) {
+  char* value_end = value + value_len;
   dtorr_node* result = (dtorr_node*)malloc(sizeof(dtorr_node));
 
   if (result == 0) {
@@ -228,7 +228,7 @@ dtorr_node* bencoding_decode(dtorr_config* config, char* value) {
 
   memset(result, 0, sizeof(dtorr_node));
 
-  if (decode_helper(config, 1, result, value) == 0) {
+  if (decode_helper(config, 1, result, value, value_end) == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Bencoding decode: failed to decode");
     /* TODO: free nodes */
     return 0;

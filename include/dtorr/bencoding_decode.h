@@ -3,6 +3,6 @@
 
 #include "dtorr/structs.h"
 
-dtorr_node* bencoding_decode(dtorr_config* config, char* value);
+dtorr_node* bencoding_decode(dtorr_config* config, char* value, unsigned long value_len);
 
 #endif

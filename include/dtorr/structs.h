@@ -38,4 +38,11 @@ struct dtorr_ctx {
 };
 typedef struct dtorr_ctx dtorr_ctx;
 
+struct dtorr_torrent {
+  char* announce;
+  char* name;
+  unsigned long piece_length;
+  char* pieces;
+};
+
 #endif

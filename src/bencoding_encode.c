@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define MAX_RECURSION 16
-#define BUFFER_UNIT 16
+#define BUFFER_UNIT 128
 
 static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size);
 
@@ -37,12 +37,15 @@ static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** 
       return 1;
     }
   }
-  char_write = sprintf(*result + *result_len, "%lu:%s", len, str);
+  char_write = sprintf(*result + *result_len, "%lu:", len);
   if (char_write == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to encode string");
     return 2;
   }
   *result_len += char_write;
+  memcpy(*result + *result_len, str, len);
+  *result_len += len;
+  *(*result + *result_len) = 0;
   return 0;
 }
 
@@ -85,7 +88,7 @@ static int handle_list(dtorr_config* config, unsigned long level, dtorr_node* no
     }
   }
   *(*result + (*result_len)++) = 'e';
-  *(*result + (*result_len)++) = 0;
+  *(*result + (*result_len)) = 0;
 
   return 0;
 }
@@ -109,9 +112,13 @@ static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* no
     return 2;
   }
 
+
+  dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: encoding hashmap");
+
   *(*result + (*result_len)++) = 'd';
   for (i = 0; i < map->entry_count; i++) {
     entry = entries[i];
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: encoding hashmap key: %s", entry->key);
 
     if (handle_str(config, 0, entry->key, result, result_len, result_size) != 0) {
       return 3;
@@ -121,7 +128,7 @@ static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* no
     }
   }
   *(*result + (*result_len)++) = 'e';
-  *(*result + (*result_len)++) = 0;
+  *(*result + (*result_len)) = 0;
 
   return 0;
 }
@@ -152,13 +159,14 @@ static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* 
   return ret;
 }
 
-char* bencoding_encode(dtorr_config* config, dtorr_node* node) {
+char* bencoding_encode(dtorr_config* config, dtorr_node* node, unsigned long* result_len) {
   unsigned long result_size = BUFFER_UNIT;
-  unsigned long result_len = 0;
   char* result = (char*)malloc(sizeof(char) * result_size);
   memset(result, 0, result_size);
 
-  if (encode_helper(config, 1, node, &result, &result_len, &result_size) != 0) {
+  *result_len = 0;
+
+  if (encode_helper(config, 1, node, &result, result_len, &result_size) != 0) {
     dlog(config, LOG_LEVEL_ERROR, "Bencoding encode: unable to encode");
     free(result);
     return 0;
