@@ -1,0 +1,168 @@
+#include "dtorr/bencoding_encode.h"
+#include "log.h"
+#include "hashmap.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_RECURSION 16
+#define BUFFER_UNIT 16
+
+static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size);
+
+static int resize_result(dtorr_config* config, char** result, unsigned long* result_size) {
+  dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: attempting buffer resize from %lu bytes", *result_size);
+  char* resized = (char*)realloc(*result, *result_size + BUFFER_UNIT);
+  if (resized == 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to resize result");
+    return 1;
+  }
+  *result = resized;
+  *result_size += BUFFER_UNIT;
+  return 0;
+}
+
+static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** result, unsigned long* result_len, unsigned long* result_size) {
+  unsigned long char_write;
+  unsigned long len;
+  if (node != 0) {
+    str = (char*)node->value;
+    len = node->len;
+  } else {
+    len = strlen(str);
+  }
+  if (len + *result_len + 32 >= *result_size) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: string needs buffer resize. curr len: %lu", *result_len);
+    if (resize_result(config, result, result_size) != 0) {
+      return 1;
+    }
+  }
+  char_write = sprintf(*result + *result_len, "%lu:%s", len, str);
+  if (char_write == 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to encode string");
+    return 2;
+  }
+  *result_len += char_write;
+  return 0;
+}
+
+static int handle_num(dtorr_config* config, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+  long* num = (long*)node->value;
+  unsigned long char_write;
+  if (*result_len + 64 >= *result_size) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: num needs buffer resize");
+    if (resize_result(config, result, result_size) != 0) {
+      return 1;
+    }
+  }
+  char_write = sprintf(*result + *result_len, "i%lde", *num);
+  if (char_write == 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to encode string");
+    return 2;
+  }
+  *result_len += char_write;
+  return 0;
+}
+
+static int handle_list(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+  dtorr_node** list = (dtorr_node**)node->value;
+  dtorr_node* element;
+  unsigned long i;
+
+  if (*result_len + 8 >= *result_size) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: list needs buffer resize");
+    if (resize_result(config, result, result_size) != 0) {
+      return 1;
+    }
+  }
+
+  *(*result + (*result_len)++) = 'l';
+  for (i = 0; i < node->len; i++) {
+    element = list[i];
+
+    if (encode_helper(config, level + 1, element, result, result_len, result_size) != 0) {
+      return 2;
+    }
+  }
+  *(*result + (*result_len)++) = 'e';
+  *(*result + (*result_len)++) = 0;
+
+  return 0;
+}
+
+static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+  dtorr_hashmap* map = (dtorr_hashmap*)node->value;
+  dtorr_hashnode** entries;
+  dtorr_hashnode* entry;
+  unsigned long i;
+
+  if (*result_len + 8 >= *result_size) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: dict needs buffer resize");
+    if (resize_result(config, result, result_size) != 0) {
+      return 1;
+    }
+  }
+
+  entries = hashmap_entries(map, 1);
+  if (entries == 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to get hashmap entries");
+    return 2;
+  }
+
+  *(*result + (*result_len)++) = 'd';
+  for (i = 0; i < map->entry_count; i++) {
+    entry = entries[i];
+
+    if (handle_str(config, 0, entry->key, result, result_len, result_size) != 0) {
+      return 3;
+    }
+    if (encode_helper(config, level + 1, entry->value, result, result_len, result_size) != 0) {
+      return 4;
+    }
+  }
+  *(*result + (*result_len)++) = 'e';
+  *(*result + (*result_len)++) = 0;
+
+  return 0;
+}
+
+static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+  int ret = 0;
+  if (level > MAX_RECURSION) {
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: max recursion reached");
+    return 0;
+  }
+  switch (node->type) {
+    case DTORR_DICT:
+      ret = handle_dict(config, level, node, result, result_len, result_size);
+      break;
+    case DTORR_LIST:
+      ret = handle_list(config, level, node, result, result_len, result_size);
+      break;
+    case DTORR_NUM:
+      ret = handle_num(config, node, result, result_len, result_size);
+      break;
+    case DTORR_STR:
+      ret = handle_str(config, node, 0, result, result_len, result_size);
+      break;
+    default:
+      dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: unknown node type");
+      return 0;
+  }
+  return ret;
+}
+
+char* bencoding_encode(dtorr_config* config, dtorr_node* node) {
+  unsigned long result_size = BUFFER_UNIT;
+  unsigned long result_len = 0;
+  char* result = (char*)malloc(sizeof(char) * result_size);
+  memset(result, 0, result_size);
+
+  if (encode_helper(config, 1, node, &result, &result_len, &result_size) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Bencoding encode: unable to encode");
+    free(result);
+    return 0;
+  }
+
+  return result;
+}
