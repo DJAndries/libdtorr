@@ -1,6 +1,5 @@
 ## TODO
 
-* metadata loading
 * tcp client/server
 * hashing
 * tracker requests
@@ -17,3 +16,4 @@
 ## DONE
 
 * bencoding parsing
+* metadata loading

@@ -42,7 +42,15 @@ struct dtorr_torrent {
   char* announce;
   char* name;
   unsigned long piece_length;
-  char* pieces;
+  dtorr_node* pieces;
+  unsigned long piece_count;
+  unsigned long length;
+  dtorr_node* files;
+
+  char* infohash;
+
+  dtorr_node* decoded;
 };
+typedef struct dtorr_torrent dtorr_torrent;
 
 #endif

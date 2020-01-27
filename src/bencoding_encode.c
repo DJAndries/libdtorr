@@ -10,15 +10,19 @@
 
 static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size);
 
-static int resize_result(dtorr_config* config, char** result, unsigned long* result_size) {
+static int resize_result(dtorr_config* config, char** result, unsigned long* result_size, unsigned long increase) {
+  if (increase == 0) {
+    increase = BUFFER_UNIT;
+  }
   dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: attempting buffer resize from %lu bytes", *result_size);
-  char* resized = (char*)realloc(*result, *result_size + BUFFER_UNIT);
+  char* resized = (char*)realloc(*result, *result_size + increase);
   if (resized == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to resize result");
     return 1;
   }
   *result = resized;
-  *result_size += BUFFER_UNIT;
+  *result_size += increase;
+  dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: resized to %lu bytes", *result_size);
   return 0;
 }
 
@@ -33,7 +37,7 @@ static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** 
   }
   if (len + *result_len + 32 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: string needs buffer resize. curr len: %lu", *result_len);
-    if (resize_result(config, result, result_size) != 0) {
+    if (resize_result(config, result, result_size, (len + *result_len + 32) - *result_size + 1) != 0) {
       return 1;
     }
   }
@@ -54,7 +58,7 @@ static int handle_num(dtorr_config* config, dtorr_node* node, char** result, uns
   unsigned long char_write;
   if (*result_len + 64 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: num needs buffer resize");
-    if (resize_result(config, result, result_size) != 0) {
+    if (resize_result(config, result, result_size, (*result_len + 64) - *result_size + 1) != 0) {
       return 1;
     }
   }
@@ -74,7 +78,7 @@ static int handle_list(dtorr_config* config, unsigned long level, dtorr_node* no
 
   if (*result_len + 8 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: list needs buffer resize");
-    if (resize_result(config, result, result_size) != 0) {
+    if (resize_result(config, result, result_size, (*result_len + 8) - *result_size + 1) != 0) {
       return 1;
     }
   }
@@ -101,7 +105,7 @@ static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* no
 
   if (*result_len + 8 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: dict needs buffer resize");
-    if (resize_result(config, result, result_size) != 0) {
+    if (resize_result(config, result, result_size, (*result_len + 8) - *result_size + 1) != 0) {
       return 1;
     }
   }
@@ -121,9 +125,12 @@ static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* no
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: encoding hashmap key: %s", entry->key);
 
     if (handle_str(config, 0, entry->key, result, result_len, result_size) != 0) {
+      free(entries);
       return 3;
     }
+    dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: wrote hashmap key: %s", entry->key);
     if (encode_helper(config, level + 1, entry->value, result, result_len, result_size) != 0) {
+      free(entries);
       return 4;
     }
   }

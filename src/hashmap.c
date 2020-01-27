@@ -80,7 +80,9 @@ void hashmap_free(dtorr_hashmap* map) {
 }
 
 static int key_sort(const void* a, const void* b) {
-  return strcmp(((dtorr_hashnode*)a)->key, ((dtorr_hashnode*)b)->key);
+  dtorr_hashnode* a_node = *((dtorr_hashnode**)a);
+  dtorr_hashnode* b_node = *((dtorr_hashnode**)b);
+  return strcmp(a_node->key, b_node->key);
 }
 
 dtorr_hashnode** hashmap_entries(dtorr_hashmap* map, char sort_by_key) {
