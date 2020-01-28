@@ -144,13 +144,13 @@ static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* 
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: allocated list element");
     memset(element, 0, sizeof(dtorr_node));
     if (curr_node->len == size) {
-      list = (dtorr_node**)realloc(list, size + 256);
+      size += 256;
+      list = (dtorr_node**)realloc(list, sizeof(dtorr_node*) * size);
       if (list == 0) {
         dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: failed to realloc list");
         free(element);
         return 0;
       }
-      size += 256;
       curr_node->value = list;
     }
     list[curr_node->len++] = element;
@@ -162,7 +162,7 @@ static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* 
 
   dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: list has %lu elements", curr_node->len);
 
-  return value;
+  return value + 1;
 }
 
 static char* handle_num(dtorr_config* config, dtorr_node* curr_node, char* value) {
@@ -233,6 +233,6 @@ dtorr_node* bencoding_decode(dtorr_config* config, char* value, unsigned long va
     /* TODO: free nodes */
     return 0;
   }
-  
+  dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: success");
   return result;
 }

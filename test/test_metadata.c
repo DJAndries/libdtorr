@@ -3,12 +3,25 @@
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 
-int main() {
+#define TORRENT_COUNT 2
+
+void print_files(dtorr_torrent* torrent) {
+  unsigned long i;
+  dtorr_file* file;
+  for (i = 0; i < torrent->file_count; i++) {
+    file = torrent->files[i];
+    printf("File: %s Length: %lu\n", file->cat_path, file->length);
+  }
+}
+
+int test_torrent(unsigned int torrent_index) {
   dtorr_config* config = (dtorr_config*)malloc(sizeof(dtorr_config));
   dtorr_torrent* torrent;
   long size;
   unsigned long i;
-  FILE* fp = fopen("test/torrents/1.torrent", "rb");
+  char filename[256];
+  sprintf(filename, "test/torrents/%u.torrent", torrent_index);
+  FILE* fp = fopen(filename, "rb");
   char* contents;
 
   if (fp == 0) {
@@ -26,7 +39,7 @@ int main() {
 
   contents[size] = 0;
 
-  config->log_level = 4;
+  config->log_level = 1;
   config->log_handler = 0;
 
   torrent = load_torrent_metadata(config, contents, (unsigned long)size);
@@ -40,7 +53,11 @@ int main() {
   printf("Length: %lu\n", torrent->length);
   printf("Piece length: %lu\n", torrent->piece_length);
   printf("Piece count: %lu\n", torrent->piece_count);
-  printf("Has files: %d\n", torrent->files != 0);
+  printf("File count: %lu\n", torrent->file_count);
+  if (torrent->files != 0) {
+    printf("Has files!\n");
+    print_files(torrent);
+  }
   printf("Hash: ");
 
   for (i = 0; i < 20; i++) {
@@ -48,6 +65,22 @@ int main() {
   }
   printf("\n\n");
 
+  free(contents);
+  free_torrent(torrent);
+
   printf("Done!\n");
+  return 0;
+}
+
+int main() {
+  unsigned int i;
+  int result;
+
+  for (i = 1; i <= TORRENT_COUNT; i++) {
+    result = test_torrent(i);
+    if (result != 0) {
+      return result;
+    }
+  }
   return 0;
 }

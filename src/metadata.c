@@ -10,36 +10,89 @@
 
 char *default_torrent_name = "torrent";
 
-static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result) {
+static char* concat_path(dtorr_node* path) {
+  char* result;
   unsigned long i;
-  dtorr_node* files = result->files;
+  unsigned long cat_path_length = 0;
+  for (i = 0; i < path->len; i++) {
+    cat_path_length += ((dtorr_node**)path->value)[i]->len + 1;
+  }
+  result = (char*)malloc(sizeof(char) * cat_path_length);
+  if (result == 0) {
+    return 0;
+  }
+  result[0] = 0;
+  for (i = 0; i < path->len; i++) {
+    strcat(result, (char*)(((dtorr_node**)path->value)[i]->value));
+    if (i < (path->len - 1)) {
+      strcat(result, "/");
+    }
+  }
+  return result;
+}
+
+static dtorr_file* construct_file(dtorr_config* config, unsigned long length, dtorr_node* path) {
+  dtorr_file* file;
+  char* cat_path = concat_path(path);
+  if (cat_path == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Unable to concatenate file path");
+    return 0;
+  }
+  file = (dtorr_file*)malloc(sizeof(dtorr_file));
+  if (file == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Unable to allocate file struct");
+    return 0;
+  }
+  file->length = length;
+  file->path = path;
+  file->cat_path = cat_path;
+  return file;
+}
+
+static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result, dtorr_node* files) {
+  unsigned long i, file_length;
   dtorr_node* node;
   dtorr_node* inner_node;
+
+  dlog(config, LOG_LEVEL_DEBUG, "Metaloading: validate and build files");
   if (files == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Unable to get file hashmap entries");
     return 1;
   }
 
+  result->files = (dtorr_file**)malloc(sizeof(dtorr_file*) * files->len);
+  if (result->files == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Unable to allocate files array");
+    return 5;
+  } 
+
   for (i = 0; i < files->len; i++) {
     node = ((dtorr_node**)files->value)[i];
-
-    if (node->type == DTORR_DICT) {
+    if (node->type != DTORR_DICT) {
       dlog(config, LOG_LEVEL_ERROR, "File is not a dict");
       return 2;
     }
 
     inner_node = hashmap_get((dtorr_hashmap*)node->value, "length");
-    if (inner_node == 0 || inner_node->type == DTORR_NUM || *((long*)inner_node->value) <= 0) {
+    if (inner_node == 0 || inner_node->type != DTORR_NUM || *((long*)inner_node->value) <= 0) {
       dlog(config, LOG_LEVEL_ERROR, "Invalid file length");
       return 3;
     }
-    result->length += *((long*)inner_node->value);
+    file_length = *((long*)inner_node->value);
+    result->length += file_length;
 
     inner_node = hashmap_get((dtorr_hashmap*)node->value, "path");
-    if (inner_node == 0 || inner_node->type != DTORR_STR || inner_node->len == 0) {
+    if (inner_node == 0 || inner_node->type != DTORR_LIST || inner_node->len == 0) {
       dlog(config, LOG_LEVEL_ERROR, "No file path");
       return 4;
     }
+
+    result->files[i] = construct_file(config, file_length, inner_node);
+    if (result->files[i] == 0) {
+      return 6;
+    }
+
+    result->file_count++;
   }
   return 0;
 }
@@ -47,6 +100,8 @@ static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result) 
 static int validate_pieces_and_length(dtorr_config* config, dtorr_torrent* result) {
   unsigned long valid_min_length = result->piece_length * (result->piece_count - 1);
   unsigned long valid_max_length = result->piece_length * result->piece_count;
+
+  dlog(config, LOG_LEVEL_DEBUG, "Metaloading: check piece length");
   if (result->length < valid_min_length || result->length > valid_max_length) {
     dlog(config, LOG_LEVEL_ERROR, "Piece length/count does not match length");
     return 1;
@@ -91,6 +146,7 @@ static int generate_infohash(dtorr_config* config, dtorr_torrent* result, dtorr_
 static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashmap* info) {
   dtorr_node* node;
 
+  dlog(config, LOG_LEVEL_DEBUG, "Metaloading: processing info");
   node = hashmap_get(info, "name");
   if (node != 0 && node->type == DTORR_STR) {
     result->name = (char*)node->value;
@@ -119,17 +175,17 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
       return 3;
     }
     result->length = *((long*)node->value);
+    result->file_count = 1;
   }
 
   node = hashmap_get(info, "files");
   if (node != 0) {
-    if (node->type == DTORR_LIST || node->len == 0) {
+    if (node->type != DTORR_LIST || node->len == 0) {
       dlog(config, LOG_LEVEL_ERROR, "Files is not a list, or is empty");
       return 4;
     }
-    result->files = node;
-    result->length = validate_and_calc_files(config, result);
-    if (result->length == 0) {
+    result->file_count = 0;
+    if (validate_and_calc_files(config, result, node) != 0) {
       return 5;
     }
   }
@@ -150,6 +206,7 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
 static int process_decoded(dtorr_config* config, dtorr_torrent* result, dtorr_node* decoded) {
   dtorr_node* node;
 
+  dlog(config, LOG_LEVEL_DEBUG, "Metaloading: processing decoded");
   result->decoded = decoded;
 
   if (decoded->type != DTORR_DICT) {
@@ -204,9 +261,17 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
 }
 
 void free_torrent(dtorr_torrent* torrent) {
+  unsigned long i;
   /* free nodes for "decoded" (if exists), will clear the rest */
   if (torrent->infohash != 0) {
     free(torrent->infohash);
+  }
+  if (torrent->files != 0) {
+    for (i = 0; i < torrent->file_count; i++) {
+      free(torrent->files[i]->cat_path);
+      free(torrent->files[i]);
+    }
+    free(torrent->files);
   }
   free(torrent);
 }

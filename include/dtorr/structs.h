@@ -38,6 +38,13 @@ struct dtorr_ctx {
 };
 typedef struct dtorr_ctx dtorr_ctx;
 
+struct dtorr_file {
+  dtorr_node* path;
+  char* cat_path;
+  unsigned long length;
+};
+typedef struct dtorr_file dtorr_file;
+
 struct dtorr_torrent {
   char* announce;
   char* name;
@@ -45,7 +52,9 @@ struct dtorr_torrent {
   dtorr_node* pieces;
   unsigned long piece_count;
   unsigned long length;
-  dtorr_node* files;
+
+  dtorr_file** files;
+  unsigned long file_count;
 
   char* infohash;
 

@@ -1,7 +1,7 @@
 ## TODO
 
-* tcp client/server
-* hashing
+* cross-platform networking layer
+* tcp server
 * tracker requests
 * peer protocol
   * handshake
@@ -12,8 +12,10 @@
 * free
 * dht
 * upnp in another project that consumes this library
+* visiblity=hidden
 
 ## DONE
 
 * bencoding parsing
 * metadata loading
+* hashing
