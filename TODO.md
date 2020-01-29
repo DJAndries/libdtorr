@@ -1,6 +1,6 @@
 ## TODO
 
-* cross-platform networking layer
+* cross-platform networking layer - win first
 * tcp server
 * tracker requests
 * peer protocol
@@ -13,6 +13,7 @@
 * dht
 * upnp in another project that consumes this library
 * visiblity=hidden
+* bsd sock support for network layer
 
 ## DONE
 
