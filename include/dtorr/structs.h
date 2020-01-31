@@ -15,7 +15,7 @@ typedef struct dtorr_node dtorr_node;
 
 struct dtorr_hashnode {
   char* key;
-  dtorr_node* value;
+  void* value;
 };
 typedef struct dtorr_hashnode dtorr_hashnode;
 
@@ -45,6 +45,13 @@ struct dtorr_file {
 };
 typedef struct dtorr_file dtorr_file;
 
+struct dtorr_peer {
+  char ip[64];
+  unsigned short port;
+  char peer_id[20];
+};
+typedef struct dtorr_peer dtorr_peer;
+
 struct dtorr_torrent {
   char* announce;
   char* name;
@@ -56,10 +63,20 @@ struct dtorr_torrent {
   dtorr_file** files;
   unsigned long file_count;
 
-  char* infohash;
+  char infohash[20];
 
   dtorr_node* decoded;
+
+  unsigned long downloaded;
+  unsigned long uploaded;
+
+  dtorr_hashmap* tracker_interval_map;
+  dtorr_hashmap* peer_map;
+
+  dtorr_peer me;
 };
 typedef struct dtorr_torrent dtorr_torrent;
+
+
 
 #endif

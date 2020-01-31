@@ -10,6 +10,8 @@
   * cancel
   * choking
 * free
+  * nodes
+  * torrent
 * dht
 * upnp in another project that consumes this library
 * visiblity=hidden

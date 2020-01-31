@@ -32,21 +32,29 @@ dtorr_hashmap* hashmap_init(unsigned long size) {
   return result;
 }
 
-int hashmap_insert(dtorr_hashmap* map, char* key, dtorr_node* value) {
+int hashmap_insert(dtorr_hashmap* map, char* key, void* value) {
   unsigned long index, i;
   dtorr_hashnode* hashnode;
+  char* key_copy;
 
   index = hash((unsigned char*)key) % map->map_size;
+
+  key_copy = (char*)malloc(sizeof(char) * strlen(key) + 1);
+  if (key_copy == 0) {
+    return 2;
+  }
+  strcpy(key_copy, key);
 
   for (i = 0; i < map->map_size; i++) {
     if (map->elements[index] == 0) {
       hashnode = (dtorr_hashnode*)malloc(sizeof(dtorr_hashnode));
 
       if (hashnode == 0) {
+        free(key_copy);
         return 1;
       }
 
-      hashnode->key = key;
+      hashnode->key = key_copy;
       hashnode->value = value;
 
       map->elements[index] = hashnode;
@@ -56,10 +64,11 @@ int hashmap_insert(dtorr_hashmap* map, char* key, dtorr_node* value) {
     index = (index + 1) % map->map_size;
   }
 
-  return 2;
+  free(key_copy);
+  return 3;
 }
 
-dtorr_node* hashmap_get(dtorr_hashmap* map, char* key) {
+void* hashmap_get(dtorr_hashmap* map, char* key) {
   unsigned long index, i;
   dtorr_hashnode* element;
   index = hash((unsigned char*)key) % map->map_size;

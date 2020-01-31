@@ -6,9 +6,9 @@
 
 dtorr_hashmap* hashmap_init(unsigned long size);
 
-int hashmap_insert(dtorr_hashmap* map, char* key, dtorr_node* value);
+int hashmap_insert(dtorr_hashmap* map, char* key, void* value);
 
-dtorr_node* hashmap_get(dtorr_hashmap* map, char* key);
+void* hashmap_get(dtorr_hashmap* map, char* key);
 
 void hashmap_free(dtorr_hashmap* map);
 

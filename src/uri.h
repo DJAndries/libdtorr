@@ -1,8 +1,6 @@
 #ifndef URI_H
 #define URI_H
 
-#include "dsock.h"
-
 struct parsed_uri {
   char* hostname;
   unsigned short port;

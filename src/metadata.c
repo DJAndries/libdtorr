@@ -112,7 +112,6 @@ static int validate_pieces_and_length(dtorr_config* config, dtorr_torrent* resul
 static int generate_infohash(dtorr_config* config, dtorr_torrent* result, dtorr_node* info) {
   unsigned long encoded_len;
   char* encoded_info;
-  char* hash;
 
   dlog(config, LOG_LEVEL_DEBUG, "Infohash generation");
 
@@ -123,22 +122,12 @@ static int generate_infohash(dtorr_config* config, dtorr_torrent* result, dtorr_
     return 1;
   }
 
-  hash = (char*)malloc(sizeof(char) * 20);
-  if (hash == 0) {
-    dlog(config, LOG_LEVEL_ERROR, "Unable to allocate mem for infohash");
-    free(encoded_info);
-    return 2;
-  }
-
   dlog(config, LOG_LEVEL_DEBUG, "Encoded info, starting hash");
 
-  if (SHA1((unsigned char*)encoded_info, encoded_len, (unsigned char*)hash) == 0) {
+  if (SHA1((unsigned char*)encoded_info, encoded_len, (unsigned char*)result->infohash) == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to generate infohash");
-    free(hash);
     free(encoded_info);
   }
-
-  result->infohash = hash;
 
   return 0;
 }

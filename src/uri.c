@@ -1,6 +1,6 @@
 #include "uri.h"
 #include <string.h>
-
+#include <stdlib.h>
 
 unsigned long parse_schema(parsed_uri* result, char* uri, unsigned long len) {
   unsigned long schema_end_i;
@@ -10,7 +10,6 @@ unsigned long parse_schema(parsed_uri* result, char* uri, unsigned long len) {
     return 0;
   }
 
-  /* parse schema */
   result->schema = (char*)malloc(sizeof(char) * (schema_end_i + 1));
   if (result->schema == 0) {
     return 0;
