@@ -74,6 +74,8 @@ struct dtorr_torrent {
   dtorr_hashmap* peer_map;
 
   dtorr_peer me;
+
+  char* download_dir;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 

@@ -1,8 +1,6 @@
 ## TODO
 
-* cross-platform networking layer - win first
 * tcp server
-* tracker requests
 * peer protocol
   * handshake
   * bitfield
@@ -16,9 +14,12 @@
 * upnp in another project that consumes this library
 * visiblity=hidden
 * bsd sock support for network layer
+* tracker intervals
 
 ## DONE
 
 * bencoding parsing
 * metadata loading
 * hashing
+* cross-platform networking layer - win first
+* tracker requests
