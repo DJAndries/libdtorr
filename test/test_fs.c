@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 #include "fs.h"
+
+#define BUF_SIZE 64 * 1024
 
 dtorr_torrent* load_torrent(dtorr_config* config) {
   dtorr_torrent* torrent;
@@ -39,13 +42,16 @@ dtorr_torrent* load_torrent(dtorr_config* config) {
 int main(int argc, char** argv) {
   dtorr_config config;
   dtorr_torrent* torrent;
+  char test_buf[BUF_SIZE];
 
   if (argc < 2) {
     printf("Must specify download dir\n");
     return 1;
   }
 
-  config.log_level = 1;
+  memset(test_buf, 2, BUF_SIZE);
+
+  config.log_level = 4;
   config.log_handler = 0;
 
   torrent = load_torrent(&config);
@@ -55,6 +61,10 @@ int main(int argc, char** argv) {
   torrent->download_dir = argv[1];
   if (init_torrent_files(&config, torrent) != 0) {
     return 1;
+  }
+
+  if (save_piece(&config, torrent, 90, 10, test_buf, BUF_SIZE) != 0) {
+    return 2;
   }
 
   printf("Done!\n");

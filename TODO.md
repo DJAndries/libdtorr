@@ -15,6 +15,7 @@
 * visiblity=hidden
 * bsd sock support for network layer
 * tracker intervals
+* support init for nested dirs
 
 ## DONE
 
@@ -23,3 +24,5 @@
 * hashing
 * cross-platform networking layer - win first
 * tracker requests
+* fs init
+* fs write / piece map

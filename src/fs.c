@@ -104,22 +104,39 @@ static int create_dir(char* path) {
   #endif
 }
 
-static int allocate_file(char* path, unsigned long length) {
-  char zerobuf[ALLOC_BUF_SIZE];
+static FILE* open_file(char* path, char* mode) {
   FILE* f;
-  unsigned long count;
   #ifdef _WIN32
     short unsigned int* wide_dir = create_wide_path(path);
-    short unsigned int* wide_mode = create_wide_path("wb");
+    short unsigned int* wide_mode = create_wide_path(mode);
     if (wide_dir == 0 || wide_mode == 0) {
-      return 4;
+      return 0;
     }
     f = _wfopen(wide_dir, wide_mode);
     free(wide_dir);
     free(wide_mode);
   #else
-    f = fopen(path, "wb");
+    f = fopen(path, mode);
   #endif
+  return f;
+}
+
+static char* file_full_path(char* download_dir, dtorr_file* meta_file) {
+  char* os_file_path;
+  char* joined_path;
+  os_file_path = convert_os_dir(meta_file->cat_path);
+  if (os_file_path == 0) {
+    return 0;
+  }
+  joined_path = join_path(download_dir, os_file_path);
+  free(os_file_path);
+  return joined_path;
+}
+
+static int allocate_file(char* path, unsigned long length) {
+  char zerobuf[ALLOC_BUF_SIZE];
+  unsigned long count;
+  FILE* f = open_file(path, "wb");
   if (f == 0) {
     return 1;
   }
@@ -141,17 +158,10 @@ static int allocate_file(char* path, unsigned long length) {
 }
 
 static int init_file(char* download_dir, dtorr_file* meta_file) {
-  char* os_file_path;
-  char* joined_path;
   char* extracted_dir;
-  os_file_path = convert_os_dir(meta_file->cat_path);
-  if (os_file_path == 0) {
-    return 1;
-  }
-  joined_path = join_path(download_dir, os_file_path);
-  free(os_file_path);
+  char* joined_path = file_full_path(download_dir, meta_file);
   if (joined_path == 0) {
-    return 2;
+    return 1;
   }
   extracted_dir = extract_dir(joined_path);
   if (extracted_dir == 0) {
@@ -180,5 +190,64 @@ int init_torrent_files(dtorr_config* config, dtorr_torrent* torrent) {
       return 1;
     }
   }
+  return 0;
+}
+
+static long save_to_file(dtorr_config* config, char* download_dir, dtorr_file* meta_file, unsigned long file_offset, char* buf, unsigned long buf_size) {
+  char* full_path;
+  FILE* f;
+  long result;
+  long len;
+  if ((full_path = file_full_path(download_dir, meta_file)) == 0) {
+    return -1;
+  }
+  if ((f = open_file(full_path, "rb+")) == 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Failed to open file");
+    free(full_path);
+    return -2;
+  }
+  free(full_path);
+  if (fseek(f, file_offset, SEEK_SET) != 0) {
+    dlog(config, LOG_LEVEL_DEBUG, "Failed to seek file");
+    fclose(f);
+    return -3;
+  }
+  len = (meta_file->length - file_offset) >= buf_size ? buf_size : (meta_file->length - file_offset);
+  dlog(config, LOG_LEVEL_DEBUG, "Writing %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
+  if ((result = fwrite(buf, sizeof(char), len, f)) != len) {
+    fclose(f);
+    return -4;
+  }
+  fclose(f);
+  return result;
+}
+
+int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, unsigned long begin, char* buf, unsigned long buf_size) {
+  unsigned long piece_global_offset = (torrent->piece_length * index) + begin;
+  unsigned long i;
+  unsigned long file_global_offset = 0;
+  unsigned long file_offset;
+  long save_result;
+  dtorr_file* meta_file;
+  for (i = 0; i < torrent->file_count && buf_size != 0; i++) {
+
+    meta_file = torrent->files[i];
+
+    if ((file_global_offset + meta_file->length) > piece_global_offset) {
+
+      file_offset = piece_global_offset - file_global_offset;
+      save_result = save_to_file(config, torrent->download_dir, meta_file, file_offset, buf, buf_size);
+
+      if (save_result < 0) {
+        dlog(config, LOG_LEVEL_ERROR, "Failed to write to file %s", torrent->files[i]->cat_path);
+        return 1;
+      }
+
+      buf += save_result;
+      buf_size -= save_result;
+      piece_global_offset += save_result;
+    }
+    file_global_offset += meta_file->length;
+  } 
   return 0;
 }

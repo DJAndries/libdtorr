@@ -1,7 +1,7 @@
 openssl_lib_dir = ../openssl
 
 
-all: lib obj bin lib/libdtorr.so bin/test_bencoding bin/test_metadata bin/test_uri bin/test_tracker bin/test_fs_init
+all: lib obj bin lib/libdtorr.so bin/test_bencoding bin/test_metadata bin/test_uri bin/test_tracker bin/test_fs
 
 bin/test_%: obj/test_%.o bin/libdtorr.so
 	gcc -lm -o $@ $< -L./lib -l:libdtorr.so
