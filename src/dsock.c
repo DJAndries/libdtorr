@@ -11,14 +11,14 @@ int dsock_init() {
   #endif
 }
 
-SOCKET dsock_connect_uri(parsed_uri* uri) {
+static SOCKET connect_helper(char* host, unsigned short port, char* schema) {
   SOCKET s;
   addrinfo hints;
   addrinfo* result;
   char port_str[16];
 
-  if (uri->port != 0) {
-    sprintf(port_str, "%u", uri->port);
+  if (port != 0) {
+    sprintf(port_str, "%u", port);
   }
 
   memset(&hints, 0, sizeof(addrinfo));
@@ -26,7 +26,7 @@ SOCKET dsock_connect_uri(parsed_uri* uri) {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
 
-  if (getaddrinfo(uri->hostname, uri->port != 0 ? port_str : uri->schema, &hints, &result) != 0) {
+  if (getaddrinfo(host, port != 0 ? port_str : schema, &hints, &result) != 0) {
     return INVALID_SOCKET;
   }
 
@@ -44,6 +44,14 @@ SOCKET dsock_connect_uri(parsed_uri* uri) {
     dsock_close(s);
   }
   return INVALID_SOCKET;
+}
+
+SOCKET dsock_connect_uri(parsed_uri* uri) {
+  return connect_helper(uri->hostname, uri->port, uri->schema);
+}
+
+SOCKET dsock_connect(char* host, unsigned short port) {
+  return connect_helper(host, port, 0);
 }
 
 void dsock_close(SOCKET s) {

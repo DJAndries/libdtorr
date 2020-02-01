@@ -6,6 +6,16 @@
 #define DTORR_LIST 3 /* dtorr_node** */
 #define DTORR_NUM 4 /* long */
 
+#ifndef _WIN32
+#ifndef SOCKET
+typedef int SOCKET;
+#endif
+#else
+#ifndef SOCKET
+typedef unsigned SOCKET;
+#endif
+#endif
+
 struct dtorr_node {
   int type;
   void* value;
@@ -25,6 +35,12 @@ struct dtorr_hashmap {
   unsigned long entry_count;
 };
 typedef struct dtorr_hashmap dtorr_hashmap;
+
+typedef struct dtorr_listnode dtorr_listnode;
+struct dtorr_listnode {
+  void* value;
+  dtorr_listnode* next;
+};
 
 struct dtorr_config {
   int log_level;
@@ -49,6 +65,8 @@ struct dtorr_peer {
   char ip[64];
   unsigned short port;
   char peer_id[20];
+  SOCKET s;
+  char active;
 };
 typedef struct dtorr_peer dtorr_peer;
 
@@ -72,8 +90,10 @@ struct dtorr_torrent {
 
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
+  char* bitfield;
 
   dtorr_peer me;
+  dtorr_listnode* active_peers;
 
   char* download_dir;
 };

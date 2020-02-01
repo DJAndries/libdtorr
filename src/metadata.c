@@ -245,6 +245,13 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
     free_torrent(result);
     return 0;
   } 
+  
+  result->bitfield = (char*)malloc(sizeof(char) * result->piece_count);
+  if (result->bitfield == 0) {
+    free_torrent(result);
+    return 0;
+  }
+  memset(result->bitfield, 0, result->piece_count);
 
   return result;
 }
@@ -254,6 +261,9 @@ void free_torrent(dtorr_torrent* torrent) {
   /* free nodes for "decoded" (if exists), will clear the rest */
   if (torrent->infohash != 0) {
     free(torrent->infohash);
+  }
+  if (torrent->bitfield != 0) {
+    free(torrent->bitfield);
   }
   if (torrent->files != 0) {
     for (i = 0; i < torrent->file_count; i++) {

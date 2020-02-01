@@ -11,13 +11,14 @@
   #define in_addr IN_ADDR
 #else
   #include <sys/socket.h>
-  #define SOCKET int
   #define INVALID_SOCKET -1
 #endif
 
 int dsock_init();
 
 SOCKET dsock_connect_uri(parsed_uri* uri);
+
+SOCKET dsock_connect(char* host, unsigned short port);
 
 void dsock_close(SOCKET s);
 
