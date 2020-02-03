@@ -2,11 +2,10 @@
 
 * tcp server
 * peer protocol
-  * handshake
   * bitfield
   * request / piece
   * cancel
-  * choking
+  * choking / interested
 * free
   * nodes
   * torrent
@@ -16,6 +15,8 @@
 * bsd sock support for network layer
 * tracker intervals
 * support init for nested dirs
+* keepalives
+* reassign half done pieces to another peer
 
 ## DONE
 
@@ -26,3 +27,5 @@
 * tracker requests
 * fs init
 * fs write / piece map
+* peer protocol
+  * handshake

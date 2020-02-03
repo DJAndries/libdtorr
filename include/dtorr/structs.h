@@ -66,7 +66,16 @@ struct dtorr_peer {
   unsigned short port;
   char peer_id[20];
   SOCKET s;
+
   char active;
+  char choked;
+  char they_interested;
+  char we_interested;
+
+  char* bitfield;
+
+  dtorr_listnode* out_piece_requests;
+  unsigned long out_request_count;
 };
 typedef struct dtorr_peer dtorr_peer;
 
@@ -82,6 +91,7 @@ struct dtorr_torrent {
   unsigned long file_count;
 
   char infohash[20];
+  char* bitfield;
 
   dtorr_node* decoded;
 
@@ -90,15 +100,24 @@ struct dtorr_torrent {
 
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
-  char* bitfield;
+
+  dtorr_peer** out_piece_request_peer_map;
+  dtorr_listnode* in_requests;
 
   dtorr_peer me;
   dtorr_listnode* active_peers;
 
   char* download_dir;
+
 };
 typedef struct dtorr_torrent dtorr_torrent;
 
-
+struct dtorr_piece_request {
+  unsigned long index;
+  unsigned long begin;
+  unsigned long length;
+  char ip_port[128];
+};
+typedef struct dtorr_piece_request dtorr_piece_request;
 
 #endif

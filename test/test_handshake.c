@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
   config.log_handler = 0;
 
   target = (dtorr_peer*)malloc(sizeof(dtorr_peer));
+  memset(target, 0, sizeof(target));
   strcpy(target->ip, argv[1]);
   target->port = strtoul(argv[2], 0, 0);
 
@@ -76,7 +77,6 @@ int main(int argc, char** argv) {
   if (torrent->active_peers == 0) {
     return 2;
   }
-
   printf("Active peer id: ");
   for (i = 0; i < 20; i++) {
     printf("%02X", ((dtorr_peer*)(torrent->active_peers->value))->peer_id[i]);

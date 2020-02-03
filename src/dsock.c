@@ -54,12 +54,13 @@ SOCKET dsock_connect(char* host, unsigned short port) {
   return connect_helper(host, port, 0);
 }
 
-void dsock_close(SOCKET s) {
+SOCKET dsock_close(SOCKET s) {
   #ifdef _WIN32
     closesocket(s);
   #else
     close(s);
   #endif
+  return INVALID_SOCKET;
 }
 
 int dsock_clean() {
