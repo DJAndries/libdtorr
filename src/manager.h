@@ -3,6 +3,6 @@
 
 #include "dtorr/structs.h"
 
-int manage_torrent(dtorr_torrent* torrent);
+int manage_torrent(dtorr_config* config, dtorr_torrent* torrent);
 
 #endif

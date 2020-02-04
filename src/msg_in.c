@@ -1,17 +1,8 @@
 #include "msg_in.h"
+#include "msg.h"
 #include "log.h"
 #include "piece_ex.h"
 #include "util.h"
-
-#define MSG_CHOKE 0
-#define MSG_UNCHOKE 1
-#define MSG_INTERESTED 2
-#define MSG_NOT_INTERESTED 3
-#define MSG_HAVE 4
-#define MSG_BITFIELD 5
-#define MSG_REQUEST 6
-#define MSG_PIECE 7
-#define MSG_CANCEL 8
 
 static int handle_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   char* in, unsigned long in_len) {
@@ -54,9 +45,8 @@ static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
 }
 
 int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-  char* in, unsigned long in_len, char* out, unsigned long* out_len) {
+  char* in, unsigned long in_len) {
   
-  *out_len = 0;
   if (in_len == 0) {
     /* set keep alive time */
     return 0;

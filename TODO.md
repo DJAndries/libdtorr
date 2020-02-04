@@ -17,6 +17,7 @@
 * support init for nested dirs
 * keepalives
 * reassign half done pieces to another peer
+* check socket buffer avail before sending
 
 ## DONE
 

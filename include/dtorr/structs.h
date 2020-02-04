@@ -71,6 +71,7 @@ struct dtorr_peer {
   char choked;
   char they_interested;
   char we_interested;
+  char bad;
 
   char* bitfield;
 
@@ -106,9 +107,10 @@ struct dtorr_torrent {
 
   dtorr_peer me;
   dtorr_listnode* active_peers;
+  unsigned long active_peer_count;
 
   char* download_dir;
-
+  unsigned long last_manage_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 
@@ -116,7 +118,7 @@ struct dtorr_piece_request {
   unsigned long index;
   unsigned long begin;
   unsigned long length;
-  char ip_port[128];
+  dtorr_peer* peer;
 };
 typedef struct dtorr_piece_request dtorr_piece_request;
 

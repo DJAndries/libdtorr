@@ -1,14 +1,18 @@
 #include "close.h"
 #include "dsock.h"
 #include "list.h"
+#include "log.h"
 #include <string.h>
 
-void peer_close(dtorr_torrent* torrent, dtorr_peer* peer) {
+void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char bad) {
+  dlog(config, LOG_LEVEL_INFO, "Closing peer %s:%u. Bad: %d", peer->ip, peer->port, bad);
   dtorr_listnode* it;
   if (peer->s != INVALID_SOCKET) {
     peer->s = dsock_close(peer->s);
   }
+  torrent->active_peer_count--;
   peer->active = 0;
+  peer->bad = bad;
   peer->out_request_count = 0;
   memset(peer->peer_id, 0, 20);
   

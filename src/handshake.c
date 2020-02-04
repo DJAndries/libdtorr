@@ -63,5 +63,6 @@ int peer_handshake(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* pee
     peer->s = dsock_close(peer->s);
   }
   peer->active = 1;
+  torrent->active_peer_count++;
   return 0;
 }
