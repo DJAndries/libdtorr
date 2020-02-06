@@ -5,4 +5,6 @@
 
 int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer);
 
+int send_interested_status(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char interested);
+
 #endif

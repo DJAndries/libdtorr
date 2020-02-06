@@ -1,5 +1,6 @@
 #include "util.h"
 #include <sys/time.h>
+#include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -36,4 +37,23 @@ void dsleep(unsigned long ms) {
   #else
     Sleep(ms);
   #endif
+}
+
+long bitfield_interest_index(char* ours, char* theirs, unsigned long len, char random) {
+  long index = 0;
+  long i;
+  unsigned long timeval;
+
+  if (random == 1) {
+    srand((unsigned int)get_time_ms());
+    index = rand() % len;
+  }
+
+  for (i = 0; i < len; i++) {
+    if (ours[index] == 0 && theirs[index] == 1) {
+      return i;
+    }
+    index = (index + 1) % len;
+  }
+  return -1;
 }

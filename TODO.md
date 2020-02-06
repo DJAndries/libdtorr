@@ -20,6 +20,7 @@
 * reassign half done pieces to another peer
 * check socket buffer avail before sending
 * connect timeout
+* piece verification
 
 ## DONE
 

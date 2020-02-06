@@ -24,5 +24,16 @@ int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer
     dlog(config, LOG_LEVEL_ERROR, "Failed to send bitfield");
     return 2;
   }
+  free(buf);
+  return 0;
+}
+
+int send_interested_status(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char interested) {
+  char buf = interested == 1 ? 2 : 3;
+
+  if (send_sock_msg(peer->s, &buf, 1) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to send interested update");
+    return 1;
+  }
   return 0;
 }

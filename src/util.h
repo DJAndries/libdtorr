@@ -9,4 +9,6 @@ unsigned long get_time_ms();
 
 void dsleep(unsigned long ms);
 
+long bitfield_interest_index(char* ours, char* theirs, unsigned long len, char random);
+
 #endif

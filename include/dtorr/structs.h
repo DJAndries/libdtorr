@@ -68,7 +68,8 @@ struct dtorr_peer {
   SOCKET s;
 
   char active;
-  char choked;
+  char they_choked;
+  char we_choked;
   char they_interested;
   char we_interested;
   char bad;
@@ -111,6 +112,7 @@ struct dtorr_torrent {
 
   char* download_dir;
   unsigned long last_peerstart_time;
+  unsigned long last_requester_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 

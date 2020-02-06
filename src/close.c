@@ -13,6 +13,10 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
   torrent->active_peer_count--;
   peer->active = 0;
   peer->bad = bad;
+
+  peer->we_choked = peer->they_choked = 0;
+  peer->they_interested = peer->we_interested = 0;
+
   peer->out_request_count = 0;
   memset(peer->peer_id, 0, 20);
   
