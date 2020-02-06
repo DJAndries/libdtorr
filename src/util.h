@@ -7,4 +7,6 @@ void uint_to_bigend(char* buf, unsigned int val);
 
 unsigned long get_time_ms();
 
+void dsleep(unsigned long ms);
+
 #endif

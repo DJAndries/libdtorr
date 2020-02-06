@@ -37,6 +37,7 @@ int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
       peer_close(config, torrent, peer, 1);
       continue;
     }
+    dlog(config, LOG_LEVEL_DEBUG, "Handshake & bitfield send ok");
   }
   
   return 0;
@@ -52,12 +53,12 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
 
   unsigned long curr_time = get_time_ms();
 
-  dlog(config, LOG_LEVEL_DEBUG, "Manage torrent at %lu ms", curr_time);
-
-  if ((curr_time - torrent->last_manage_time) >= START_PEERS_INTERVAL) {
+  if ((curr_time - torrent->last_peerstart_time) >= START_PEERS_INTERVAL) {
+    dlog(config, LOG_LEVEL_DEBUG, "Peerstarts at %lu ms", curr_time);
     if (start_peers(config, torrent) != 0) {
       return 1;
     }
+    torrent->last_peerstart_time = curr_time;
   }
 
   for (it = torrent->active_peers; it != 0; it = next) {
@@ -66,8 +67,8 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
 
     read_result = extract_sock_msg(peer->s, buf, MSG_BUF_SIZE, &msg_len);
     if (read_result != 0) {
-      if (read_result == 2) {
-        peer_close(config, torrent, peer, 1);
+      if (read_result >= 2) {
+        peer_close(config, torrent, peer, read_result == 2);
       }
       continue;
     }
@@ -77,7 +78,6 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
     }
   }
 
-  torrent->last_manage_time = curr_time;
 
   return 0;
 }

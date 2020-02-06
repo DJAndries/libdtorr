@@ -110,7 +110,7 @@ struct dtorr_torrent {
   unsigned long active_peer_count;
 
   char* download_dir;
-  unsigned long last_manage_time;
+  unsigned long last_peerstart_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 

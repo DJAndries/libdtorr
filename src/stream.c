@@ -11,7 +11,7 @@ int extract_sock_msg(SOCKET s, char* buf, unsigned long buf_size, unsigned long*
 
   bytes_avail = recv(s, temp_buf, TEMP_BUF_SIZE, MSG_PEEK);
 
-  if (bytes_avail < 4) {
+  if (bytes_avail == -1 || bytes_avail < 4) {
     return 1;
   }
 

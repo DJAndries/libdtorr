@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef _WIN32
+  #include <fcntl.h>
+#endif
+
 int dsock_init() {
   #ifdef _WIN32
     WSADATA data;
@@ -52,6 +56,20 @@ SOCKET dsock_connect_uri(parsed_uri* uri) {
 
 SOCKET dsock_connect(char* host, unsigned short port) {
   return connect_helper(host, port, 0);
+}
+
+int dsock_set_sock_nonblocking(SOCKET s) {
+  #ifdef _WIN32
+    unsigned long mode = 1;
+    return ioctlsocket(s, FIONBIO, &mode);
+  #else
+    int flags = fcntl(s, F_GETFL, 0);
+    if (flags == -1) {
+      return 1;
+    }
+    flags |= O_NONBLOCK;
+    return fcntl(s, F_SETFL, flags);
+  #endif
 }
 
 SOCKET dsock_close(SOCKET s) {

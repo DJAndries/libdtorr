@@ -6,7 +6,7 @@
 
 #define BT_HEADER "\x13" "BitTorrent protocol\x00\x00\x00\x00\x00\x00\x00\x00"
 #define BT_HEADER_LEN 28
-#define BT_HS_LEN 48
+#define BT_HS_LEN 68
 
 int peer_handshake(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer) {
   char msg[128];
@@ -64,5 +64,11 @@ int peer_handshake(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* pee
   }
   peer->active = 1;
   torrent->active_peer_count++;
+
+  if (dsock_set_sock_nonblocking(peer->s) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Fail to set socket as non blocking");
+    peer->s = dsock_close(peer->s);
+  }
+
   return 0;
 }

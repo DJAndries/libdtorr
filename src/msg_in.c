@@ -60,7 +60,7 @@ int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
       break;
     case MSG_INTERESTED:
     case MSG_NOT_INTERESTED:
-      dlog(config, LOG_LEVEL_DEBUG, "Peer interested status changed: ", in[0] == MSG_INTERESTED);
+      dlog(config, LOG_LEVEL_DEBUG, "Peer interested status changed: %d", in[0] == MSG_INTERESTED);
       peer->they_interested = in[0] == MSG_INTERESTED;
       break;
     case MSG_HAVE:

@@ -1,5 +1,6 @@
 ## TODO
 
+* switch socket to non blocking
 * tcp server
 * peer protocol
   * bitfield
@@ -18,6 +19,7 @@
 * keepalives
 * reassign half done pieces to another peer
 * check socket buffer avail before sending
+* connect timeout
 
 ## DONE
 

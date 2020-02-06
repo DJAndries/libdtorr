@@ -2,7 +2,8 @@
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 #include "dsock.h"
-#include "handshake.h"
+#include "tracker.h"
+#include "manager.h"
 #include "util.h"
 
 dtorr_torrent* load_torrent(dtorr_config* config) {
@@ -40,54 +41,53 @@ dtorr_torrent* load_torrent(dtorr_config* config) {
 int main(int argc, char** argv) {
   dtorr_config config;
   dtorr_torrent* torrent;
-  dtorr_peer* target;
   unsigned long i;
-
-  if (argc < 3) {
-    printf("Must specify target ip and port\n");
-    return 1;
-  }
+  char* bitfield;
 
   if (dsock_init() != 0) {
     printf("Unable to init socket.\n");
-    return 2;
+    return 1;
   }
 
   config.log_level = 4;
   config.log_handler = 0;
 
-  target = (dtorr_peer*)malloc(sizeof(dtorr_peer));
-  memset(target, 0, sizeof(dtorr_peer));
-  strcpy(target->ip, argv[1]);
-  target->port = strtoul(argv[2], 0, 0);
-
   torrent = load_torrent(&config);
   if (torrent == 0) {
-    return 1;
+    return 2;
   }
+
   torrent->downloaded = 1;
 
   sprintf(torrent->me.ip, "192.168.0.1");
   torrent->me.port = 300;
   memcpy(torrent->me.peer_id, "14366678981935567890", 20);
+  torrent->bitfield[314] = 1;
 
-  if (peer_handshake(&config, torrent, target) != 0) {
-    return 1;
+  if (tracker_announce(&config, torrent->announce, torrent) != 0) {
+    return 3;
+  }
+
+  for (i = 0; i < 10; i++) {
+    if (manage_torrent(&config, torrent) != 0) {
+      return 1;
+    }
+    dsleep(500);
   }
 
   if (torrent->active_peers == 0) {
+    printf("No active peers!");
     return 2;
   }
-  printf("Active peer id: ");
-  for (i = 0; i < 20; i++) {
-    printf("%02X", ((dtorr_peer*)(torrent->active_peers->value))->peer_id[i]);
-  }
-  printf("\n");
 
-  dsleep(10000);
+  bitfield = ((dtorr_peer*)torrent->active_peers->value)->bitfield;
+  printf("Bitfield: ");
+  for (i = 0; i < torrent->piece_count; i++) {
+    printf("%d", bitfield[i]);
+  }
 
   dsock_clean();
 
-  printf("Done!\n");
-  return 0;
+  printf("\nDone!\n");
+  return 1;
 }

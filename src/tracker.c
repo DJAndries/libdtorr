@@ -31,9 +31,16 @@ static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri
     
     peer->port = *((char*)peer_str->value + i + 4) << 8;
     peer->port |= *((char*)peer_str->value + i + 5);
+
+    /* compare ip in prod */
+    if (peer->port == torrent->me.port) {
+      free(peer);
+      continue;
+    }
     
     sprintf(ip_and_port, "%s:%u", peer->ip, peer->port);
     if (hashmap_get(torrent->peer_map, ip_and_port) == 0) {
+      dlog(config, LOG_LEVEL_DEBUG, "Tracker announce: discovered peer %s", ip_and_port);
       if (hashmap_insert(torrent->peer_map, ip_and_port, peer) != 0) {
         dlog(config, LOG_LEVEL_ERROR, "Tracker announce: failed to place peer in map"); 
         free(peer);

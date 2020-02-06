@@ -11,6 +11,7 @@ dtorr_ctx* dtorr_init(dtorr_config* config) {
   return ctx;
 }
 
+
 void dtorr_free(dtorr_ctx* ctx) {
   free(ctx);
 }
