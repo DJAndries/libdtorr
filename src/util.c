@@ -12,7 +12,7 @@ unsigned int bigend_to_uint(char* buf) {
   unsigned int result = 0;
   for (i = 0; i < 4; i++) {
     result <<= 8;
-    result |= buf[i];
+    result |= buf[i] & 0xFF;
   }
   return result;
 }
@@ -37,23 +37,4 @@ void dsleep(unsigned long ms) {
   #else
     Sleep(ms);
   #endif
-}
-
-long bitfield_interest_index(char* ours, char* theirs, unsigned long len, char random) {
-  long index = 0;
-  long i;
-  unsigned long timeval;
-
-  if (random == 1) {
-    srand((unsigned int)get_time_ms());
-    index = rand() % len;
-  }
-
-  for (i = 0; i < len; i++) {
-    if (ours[index] == 0 && theirs[index] == 1) {
-      return i;
-    }
-    index = (index + 1) % len;
-  }
-  return -1;
 }

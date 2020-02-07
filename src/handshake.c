@@ -63,6 +63,7 @@ int peer_handshake(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* pee
     peer->s = dsock_close(peer->s);
   }
   peer->active = 1;
+  peer->they_choked = peer->we_choked = 1;
   torrent->active_peer_count++;
 
   if (dsock_set_sock_nonblocking(peer->s) != 0) {

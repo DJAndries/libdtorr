@@ -1,4 +1,5 @@
 #include "msg_in.h"
+#include <stdlib.h>
 #include "msg.h"
 #include "log.h"
 #include "piece_ex.h"
@@ -44,6 +45,22 @@ static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
   return 0;
 }
 
+static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char choked) {
+  dtorr_listnode *it, *next;
+  dlog(config, LOG_LEVEL_DEBUG, "Peer choke status changed: %d", choked);
+  peer->they_choked = choked;
+  if (choked == 0) {
+    return;
+  }
+  for (it = peer->out_piece_requests; it != 0; it = next) {
+    next = it->next;
+    torrent->out_piece_request_peer_map[((dtorr_piece_request*)it->value)->index] = 0;
+    free(it->value);
+    free(it);
+  }
+  peer->total_request_count = peer->sent_request_count = 0;
+}
+
 int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   char* in, unsigned long in_len) {
   
@@ -55,8 +72,7 @@ int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   switch (in[0]) {
     case MSG_CHOKE:
     case MSG_UNCHOKE:
-      dlog(config, LOG_LEVEL_DEBUG, "Peer choke status changed: %d", in[0] == MSG_CHOKE);
-      peer->choked = in[0] == MSG_CHOKE;
+      handle_choke(config, torrent, peer, in[0] == MSG_CHOKE);
       break;
     case MSG_INTERESTED:
     case MSG_NOT_INTERESTED:

@@ -5,6 +5,7 @@
 #include "tracker.h"
 #include "manager.h"
 #include "util.h"
+#include "fs.h"
 
 dtorr_torrent* load_torrent(dtorr_config* config) {
   dtorr_torrent* torrent;
@@ -44,6 +45,11 @@ int main(int argc, char** argv) {
   unsigned long i;
   char* bitfield;
 
+  if (argc < 2) {
+    printf("Must specify download dir\n");
+    return 1;
+  }
+
   if (dsock_init() != 0) {
     printf("Unable to init socket.\n");
     return 1;
@@ -62,13 +68,16 @@ int main(int argc, char** argv) {
   sprintf(torrent->me.ip, "192.168.0.1");
   torrent->me.port = 300;
   memcpy(torrent->me.peer_id, "14366678981935567890", 20);
-  torrent->bitfield[314] = 1;
+  torrent->download_dir = argv[1];
+  if (init_torrent_files(&config, torrent) != 0) {
+    return 1;
+  }
 
   if (tracker_announce(&config, torrent->announce, torrent) != 0) {
     return 3;
   }
 
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 80; i++) {
     if (manage_torrent(&config, torrent) != 0) {
       return 1;
     }

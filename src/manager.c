@@ -65,6 +65,9 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
 
   if ((curr_time - torrent->last_requester_time) >= REQUESTER_INTERVAL) {
     interest_update(config, torrent);
+    if (send_requests(config, torrent) != 0) {
+      return 2;
+    }
     torrent->last_requester_time = curr_time;
   }
 

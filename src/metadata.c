@@ -132,13 +132,44 @@ static int generate_infohash(dtorr_config* config, dtorr_torrent* result, dtorr_
   return 0;
 }
 
+static int handle_single_file(dtorr_config* config, dtorr_torrent* result, dtorr_node* path) {
+  if (result->length == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "No length available");
+    return 1;
+  }
+  result->files = (dtorr_file**)malloc(sizeof(dtorr_file*));
+  if (result->files == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to init file array");
+    return 2;
+  }
+  result->files[0] = (dtorr_file*)malloc(sizeof(dtorr_file)); 
+  if (result->files[0] == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to init file");
+    free(result->files);
+    return 3;
+  }
+  result->files[0]->cat_path = (char*)malloc(sizeof(char) * strlen(result->name) + 1);
+  if (result->files[0]->cat_path == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to init file path");
+    free(result->files[0]);
+    free(result->files);
+    return 4;
+  }
+  result->files[0]->path = path; 
+  strcpy(result->files[0]->cat_path, result->name);
+  result->files[0]->length = result->length;
+  result->file_count = 1;
+  return 0;
+}
+
 static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashmap* info) {
   dtorr_node* node;
+  dtorr_node* name_node;
 
   dlog(config, LOG_LEVEL_DEBUG, "Metaloading: processing info");
-  node = hashmap_get(info, "name");
-  if (node != 0 && node->type == DTORR_STR) {
-    result->name = (char*)node->value;
+  name_node = hashmap_get(info, "name");
+  if (name_node != 0 && name_node->type == DTORR_STR) {
+    result->name = (char*)name_node->value;
   } else {
     result->name = default_torrent_name;
   }
@@ -177,16 +208,20 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
     if (validate_and_calc_files(config, result, node) != 0) {
       return 5;
     }
+  } else {
+    if (handle_single_file(config, result, name_node) != 0) {
+      return 6;
+    }
   }
 
   if (result->length == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Length is zero");
-    return 6;
+    return 7;
   }
 
   result->piece_count = result->pieces->len / 20;
   if (validate_pieces_and_length(config, result) != 0) {
-    return 7;
+    return 8;
   }
 
   return 0;
@@ -253,6 +288,13 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
   }
   memset(result->bitfield, 0, result->piece_count);
 
+  result->out_piece_request_peer_map = (dtorr_peer**)malloc(sizeof(dtorr_peer*) * result->piece_count);
+  if (result->out_piece_request_peer_map == 0) {
+    free_torrent(result);
+    return 0;
+  }
+  memset(result->out_piece_request_peer_map, 0, sizeof(dtorr_peer*) * result->piece_count);
+
   return result;
 }
 
@@ -264,6 +306,9 @@ void free_torrent(dtorr_torrent* torrent) {
   }
   if (torrent->bitfield != 0) {
     free(torrent->bitfield);
+  }
+  if (torrent->out_piece_request_peer_map != 0) {
+    free(torrent->out_piece_request_peer_map);
   }
   if (torrent->files != 0) {
     for (i = 0; i < torrent->file_count; i++) {

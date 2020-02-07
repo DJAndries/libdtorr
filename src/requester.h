@@ -5,4 +5,6 @@
 
 void interest_update(dtorr_config* config, dtorr_torrent* torrent);
 
+int send_requests(dtorr_config* config, dtorr_torrent* torrent);
+
 #endif

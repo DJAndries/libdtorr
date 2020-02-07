@@ -77,7 +77,8 @@ struct dtorr_peer {
   char* bitfield;
 
   dtorr_listnode* out_piece_requests;
-  unsigned long out_request_count;
+  unsigned long sent_request_count;
+  unsigned long total_request_count;
 };
 typedef struct dtorr_peer dtorr_peer;
 
@@ -121,6 +122,7 @@ struct dtorr_piece_request {
   unsigned long begin;
   unsigned long length;
   dtorr_peer* peer;
+  char request_sent;
 };
 typedef struct dtorr_piece_request dtorr_piece_request;
 
