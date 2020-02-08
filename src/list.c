@@ -16,20 +16,20 @@ int list_insert(dtorr_listnode** head, void* value) {
 
 void list_remove(dtorr_listnode** head, void* value) {
   dtorr_listnode* prev = 0;
-  dtorr_listnode** next;
-  dtorr_listnode** it;
-  for (it = head; *it != 0; it = next) {
-    next = &(*it)->next;
-    if ((*it)->value == value) {
+  dtorr_listnode* next;
+  dtorr_listnode* it;
+  for (it = *head; it != 0; it = next) {
+    next = it->next;
+    if (it->value == value) {
       if (prev != 0) {
-        prev->next = (*it)->next;
+        prev->next = next;
       }
-      if (head == it) {
-        *head = (*it)->next;
+      if (*head == it) {
+        *head = next;
       }
-      free(*it);
+      free(it);
     } else {
-      prev = *it;
+      prev = it;
     }
   }
 }

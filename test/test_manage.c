@@ -77,11 +77,11 @@ int main(int argc, char** argv) {
     return 3;
   }
 
-  for (i = 0; i < 80; i++) {
+  for (i = 0; i < 100000000; i++) {
     if (manage_torrent(&config, torrent) != 0) {
       return 1;
     }
-    dsleep(500);
+    // dsleep(500);
   }
 
   if (torrent->active_peers == 0) {

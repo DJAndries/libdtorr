@@ -7,7 +7,7 @@
 #include "msg_out.h"
 #include "util.h"
 
-#define MAX_SENT_REQUESTS 3
+#define MAX_SENT_REQUESTS 24
 #define REQUEST_SIZE 16 * 1024
 
 long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char random) {
@@ -90,8 +90,12 @@ static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
       free(req);
       return 2;
     }
+    peer->total_request_count++;
   }
-  return 0;
+
+  torrent->out_piece_request_peer_map[request_index] = peer;
+
+  return queue_requests(config, torrent, peer);
 }
 
 int send_requests(dtorr_config* config, dtorr_torrent* torrent) {
