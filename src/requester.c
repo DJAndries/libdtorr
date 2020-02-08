@@ -7,7 +7,7 @@
 #include "msg_out.h"
 #include "util.h"
 
-#define MAX_SENT_REQUESTS 24
+#define MAX_SENT_REQUESTS 128
 #define REQUEST_SIZE 16 * 1024
 
 long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char random) {

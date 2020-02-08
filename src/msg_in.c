@@ -45,6 +45,26 @@ static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
   return 0;
 }
 
+static int handle_have(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long in_len) {
+  unsigned long index;
+  
+  if (in_len < 5) {
+    dlog(config, LOG_LEVEL_WARN, "Bad have length");
+    return 1;
+  }
+
+  index = bigend_to_uint(in + 1);
+
+  if (index >= torrent->piece_count) {
+    dlog(config, LOG_LEVEL_WARN, "Have index exceeds piece count");
+    return 2;
+  }
+
+  peer->bitfield[index] = 1;
+
+  return 0;
+}
+
 static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char choked) {
   dtorr_listnode *it, *next;
   dlog(config, LOG_LEVEL_DEBUG, "Peer choke status changed: %d", choked);
@@ -80,7 +100,7 @@ int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
       peer->they_interested = in[0] == MSG_INTERESTED;
       break;
     case MSG_HAVE:
-      break;
+      return handle_have(config, torrent, peer, in, in_len);
     case MSG_BITFIELD:
       dlog(config, LOG_LEVEL_DEBUG, "Received bitfield");
       return handle_bitfield(config, torrent, peer, in, in_len);

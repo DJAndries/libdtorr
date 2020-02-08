@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  config.log_level = 4;
+  config.log_level = 1;
   config.log_handler = 0;
 
   torrent = load_torrent(&config);
