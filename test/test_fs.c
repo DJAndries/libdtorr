@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  if (save_piece(&config, torrent, 90, 10, test_buf, BUF_SIZE) != 0) {
+  if (save_piece(&config, torrent, 90, test_buf, BUF_SIZE) != 0) {
     return 2;
   }
 

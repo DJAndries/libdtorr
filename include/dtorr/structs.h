@@ -104,7 +104,7 @@ struct dtorr_torrent {
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
 
-  dtorr_peer** out_piece_request_peer_map;
+  char** out_piece_buf_map;
   dtorr_listnode* in_requests;
 
   dtorr_peer me;

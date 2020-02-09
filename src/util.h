@@ -9,4 +9,6 @@ unsigned long get_time_ms();
 
 void dsleep(unsigned long ms);
 
+unsigned long calc_piece_length(unsigned long piece_count, unsigned long piece_length, unsigned long total_length, unsigned long index);
+
 #endif

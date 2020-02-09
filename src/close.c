@@ -7,6 +7,7 @@
 void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char bad) {
   dlog(config, LOG_LEVEL_INFO, "Closing peer %s:%u. Bad: %d", peer->ip, peer->port, bad);
   dtorr_listnode* it;
+  unsigned long index;
   if (peer->s != INVALID_SOCKET) {
     peer->s = dsock_close(peer->s);
   }
@@ -26,7 +27,11 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
   }
 
   for (it = peer->out_piece_requests; it != 0; it = it->next) {
-    torrent->out_piece_request_peer_map[((dtorr_piece_request*)it->value)->index] = 0;
+    index = ((dtorr_piece_request*)it->value)->index;
+    if (torrent->out_piece_buf_map[index] != 0) {
+      free(torrent->out_piece_buf_map[index]);
+      torrent->out_piece_buf_map[index] = 0;
+    }
   }  
   list_free(peer->out_piece_requests, 1);
   peer->out_piece_requests = 0;

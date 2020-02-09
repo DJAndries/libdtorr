@@ -222,8 +222,8 @@ static long save_to_file(dtorr_config* config, char* download_dir, dtorr_file* m
   return result;
 }
 
-int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, unsigned long begin, char* buf, unsigned long buf_size) {
-  unsigned long piece_global_offset = (torrent->piece_length * index) + begin;
+int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, char* buf, unsigned long buf_size) {
+  unsigned long piece_global_offset = torrent->piece_length * index;
   unsigned long i;
   unsigned long file_global_offset = 0;
   unsigned long file_offset;
@@ -239,6 +239,7 @@ int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index
       save_result = save_to_file(config, torrent->download_dir, meta_file, file_offset, buf, buf_size);
 
       if (save_result < 0) {
+
         dlog(config, LOG_LEVEL_ERROR, "Failed to write to file %s", torrent->files[i]->cat_path);
         return 1;
       }

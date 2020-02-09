@@ -21,7 +21,7 @@ long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char rand
 
   for (i = 0; i < torrent->piece_count; i++) {
     if (torrent->bitfield[index] == 0 && peer->bitfield[index] == 1
-      && torrent->out_piece_request_peer_map[index] == 0) {
+      && torrent->out_piece_buf_map[index] == 0) {
       return index;
     }
     index = (index + 1) % torrent->piece_count;
@@ -60,7 +60,7 @@ void interest_update(dtorr_config* config, dtorr_torrent* torrent) {
 
 static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer) {
   long request_index;
-  unsigned long piece_length, begin;
+  unsigned long piece_length, piece_length_i, begin;
   dtorr_piece_request* req;
   if (peer->total_request_count >= MAX_SENT_REQUESTS * 2) {
     return 0;
@@ -71,21 +71,20 @@ static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
   }
 
   dlog(config, LOG_LEVEL_DEBUG, "Queueing requests for piece %ld", request_index);
-  piece_length = (request_index + 1) == torrent->piece_count ? 
-    torrent->length - (request_index * torrent->piece_length) : torrent->piece_length;
+  piece_length_i = piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, request_index);
 
   begin = 0;
-  while (piece_length != 0) {
+  while (piece_length_i != 0) {
     req = (dtorr_piece_request*)malloc(sizeof(dtorr_piece_request));
     if (req == 0) {
       return 1;
     }
     memset(req, 0, sizeof(dtorr_piece_request));
-    req->length = piece_length >= REQUEST_SIZE ? REQUEST_SIZE : piece_length;
+    req->length = piece_length_i >= REQUEST_SIZE ? REQUEST_SIZE : piece_length_i;
     req->index = request_index;
     req->begin = begin;
     begin += req->length;
-    piece_length -= req->length;
+    piece_length_i -= req->length;
     if (list_insert(&peer->out_piece_requests, req) != 0) {
       free(req);
       return 2;
@@ -93,7 +92,10 @@ static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
     peer->total_request_count++;
   }
 
-  torrent->out_piece_request_peer_map[request_index] = peer;
+  torrent->out_piece_buf_map[request_index] = malloc(sizeof(char) * piece_length);
+  if (torrent->out_piece_buf_map[request_index] == 0) {
+    return 3;
+  }
 
   return queue_requests(config, torrent, peer);
 }
@@ -125,7 +127,6 @@ int send_requests(dtorr_config* config, dtorr_torrent* torrent) {
       dlog(config, LOG_LEVEL_DEBUG, "Sending request. piece: %lu begin: %lu len: %lu",
         req->index, req->begin, req->length);
       if (send_request(config, torrent, peer, req) != 0) {
-        peer_close(config, torrent, peer, 0);
         break;
       }
       req->request_sent = 1;

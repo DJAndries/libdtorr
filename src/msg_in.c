@@ -67,6 +67,7 @@ static int handle_have(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer*
 
 static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char choked) {
   dtorr_listnode *it, *next;
+  unsigned long index;
   dlog(config, LOG_LEVEL_DEBUG, "Peer choke status changed: %d", choked);
   peer->they_choked = choked;
   if (choked == 0) {
@@ -74,15 +75,18 @@ static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_pee
   }
   for (it = peer->out_piece_requests; it != 0; it = next) {
     next = it->next;
-    torrent->out_piece_request_peer_map[((dtorr_piece_request*)it->value)->index] = 0;
+    index = ((dtorr_piece_request*)it->value)->index;
+    if (torrent->out_piece_buf_map[index] != 0) {
+      free(torrent->out_piece_buf_map[index]);
+      torrent->out_piece_buf_map[index] = 0;
+    }
     free(it->value);
     free(it);
   }
   peer->total_request_count = peer->sent_request_count = 0;
 }
 
-int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-  char* in, unsigned long in_len) {
+int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long in_len) {
   
   if (in_len == 0) {
     /* set keep alive time */

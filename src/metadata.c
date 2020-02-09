@@ -288,12 +288,12 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
   }
   memset(result->bitfield, 0, result->piece_count);
 
-  result->out_piece_request_peer_map = (dtorr_peer**)malloc(sizeof(dtorr_peer*) * result->piece_count);
-  if (result->out_piece_request_peer_map == 0) {
+  result->out_piece_buf_map = (char**)malloc(sizeof(char*) * result->piece_count);
+  if (result->out_piece_buf_map == 0) {
     free_torrent(result);
     return 0;
   }
-  memset(result->out_piece_request_peer_map, 0, sizeof(dtorr_peer*) * result->piece_count);
+  memset(result->out_piece_buf_map, 0, sizeof(char*) * result->piece_count);
 
   return result;
 }
@@ -307,8 +307,8 @@ void free_torrent(dtorr_torrent* torrent) {
   if (torrent->bitfield != 0) {
     free(torrent->bitfield);
   }
-  if (torrent->out_piece_request_peer_map != 0) {
-    free(torrent->out_piece_request_peer_map);
+  if (torrent->out_piece_buf_map != 0) {
+    free(torrent->out_piece_buf_map);
   }
   if (torrent->files != 0) {
     for (i = 0; i < torrent->file_count; i++) {

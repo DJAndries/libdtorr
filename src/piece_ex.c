@@ -2,11 +2,20 @@
 #include "fs.h"
 #include "msg_out.h"
 #include "list.h"
+#include "log.h"
+#include "util.h"
 #include <stdlib.h>
 
 static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, unsigned long index) {
+  unsigned long piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
+
   torrent->bitfield[index] = 1;
-  torrent->out_piece_request_peer_map[index] = 0;
+
+  if (save_piece(config, torrent, index, torrent->out_piece_buf_map[index], piece_length) != 0) {
+    return 1;
+  }
+  free(torrent->out_piece_buf_map[index]);
+  torrent->out_piece_buf_map[index] = 0;
   /* verify piece, return bad return value if bad */
   return send_have(config, torrent, index);
 }
@@ -17,9 +26,7 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   dtorr_piece_request *it_req;
   char is_request_left = 0;
 
-  if (save_piece(config, torrent, index, begin, piece, piece_len) != 0) {
-    return 3;
-  }
+  dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: %lu begin: %lu", index, begin);
 
   for (it = peer->out_piece_requests; it != 0; it = next) {
     next = it->next;

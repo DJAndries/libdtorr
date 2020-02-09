@@ -38,3 +38,7 @@ void dsleep(unsigned long ms) {
     Sleep(ms);
   #endif
 }
+
+unsigned long calc_piece_length(unsigned long piece_count, unsigned long piece_length, unsigned long total_length, unsigned long index) {
+  return (index + 1) == piece_count ? total_length - (index * piece_length) : piece_length;
+}

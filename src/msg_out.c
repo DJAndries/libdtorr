@@ -70,6 +70,7 @@ int send_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   if (send_sock_msg(peer->s, buf, 13) != 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send piece request");
     peer_close(config, torrent, peer, 0);
+    return 1;
   }
 
   return 0;
