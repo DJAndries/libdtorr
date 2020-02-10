@@ -1,10 +1,7 @@
 ## TODO
 
-* switch socket to non blocking
 * tcp server
 * peer protocol
-  * bitfield
-  * request / piece
   * cancel
   * choking / interested
 * free
@@ -33,3 +30,6 @@
 * fs write / piece map
 * peer protocol
   * handshake
+  * bitfield
+  * request / piece
+* switch socket to non blocking

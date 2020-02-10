@@ -86,7 +86,7 @@ struct dtorr_torrent {
   char* announce;
   char* name;
   unsigned long piece_length;
-  dtorr_node* pieces;
+  char* pieces;
   unsigned long piece_count;
   unsigned long length;
 

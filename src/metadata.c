@@ -179,7 +179,8 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
     dlog(config, LOG_LEVEL_ERROR, "No pieces available or not right length");
     return 1;
   }
-  result->pieces = node;
+  result->pieces = node->value;
+  result->piece_count = node->len / 20;
 
   node = hashmap_get(info, "piece length");
   if (node == 0 || node->type != DTORR_NUM || *((long*)node->value) <= 0) {
@@ -219,7 +220,6 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
     return 7;
   }
 
-  result->piece_count = result->pieces->len / 20;
   if (validate_pieces_and_length(config, result) != 0) {
     return 8;
   }

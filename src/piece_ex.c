@@ -4,15 +4,28 @@
 #include "list.h"
 #include "log.h"
 #include "util.h"
+#include <string.h>
 #include <stdlib.h>
+#include <openssl/sha.h>
 
 static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, unsigned long index) {
   unsigned long piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
+  unsigned char* hash;
 
   torrent->bitfield[index] = 1;
 
-  if (save_piece(config, torrent, index, torrent->out_piece_buf_map[index], piece_length) != 0) {
+  if ((hash = SHA1((unsigned char*)torrent->out_piece_buf_map[index], piece_length, 0)) == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Unable to hash/verify piece");
     return 1;
+  }
+
+  if (memcmp(hash, torrent->pieces + (20 * index), 20) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Hash mismatch for piece index %lu", index);
+    return 2;
+  }
+
+  if (save_piece(config, torrent, index, torrent->out_piece_buf_map[index], piece_length) != 0) {
+    return 3;
   }
   free(torrent->out_piece_buf_map[index]);
   torrent->out_piece_buf_map[index] = 0;
@@ -27,6 +40,8 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   char is_request_left = 0;
 
   dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: %lu begin: %lu", index, begin);
+
+  memcpy(torrent->out_piece_buf_map[index] + begin, piece, piece_len);
 
   for (it = peer->out_piece_requests; it != 0; it = next) {
     next = it->next;

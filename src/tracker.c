@@ -29,8 +29,8 @@ static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri
     memset(peer, 0, sizeof(dtorr_peer));
     strcpy(peer->ip, inet_ntoa(*((in_addr*)(peer_str->value + i))));
     
-    peer->port = *((char*)peer_str->value + i + 4) << 8;
-    peer->port |= *((char*)peer_str->value + i + 5);
+    peer->port = (*((char*)peer_str->value + i + 4) & 0xFF) << 8;
+    peer->port |= *((char*)peer_str->value + i + 5) & 0xFF;
 
     /* compare ip in prod */
     if (peer->port == torrent->me.port) {
