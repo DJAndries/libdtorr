@@ -4,6 +4,7 @@
 #include "dtorr/bencoding_encode.h"
 #include "log.h"
 #include "hashmap.h"
+#include "state_persist.h"
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/sha.h>
@@ -258,6 +259,7 @@ static int process_decoded(dtorr_config* config, dtorr_torrent* result, dtorr_no
     return 5;
   }
 
+
   return 0;
 }
 
@@ -294,6 +296,8 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
     return 0;
   }
   memset(result->out_piece_buf_map, 0, sizeof(char*) * result->piece_count);
+
+  parse_state(config, result);
 
   return result;
 }

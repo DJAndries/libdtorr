@@ -1,3 +1,4 @@
 obj/*
 bin/*
 lib/*
+test/torrents/test_state.torrent
