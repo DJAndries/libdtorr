@@ -5,6 +5,7 @@
 #include "handshake.h"
 #include "requester.h"
 #include "stream.h"
+#include "choke.h"
 #include "close.h"
 #include "log.h"
 #include "util.h"
@@ -12,6 +13,7 @@
 #define MAX_CONNECTIONS 20
 #define START_PEERS_INTERVAL 10000
 #define REQUESTER_INTERVAL 500
+#define CHOKE_INTERVAL 750
 #define MSG_BUF_SIZE 32 * 1024
 
 int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
@@ -69,6 +71,11 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
       return 2;
     }
     torrent->last_requester_time = curr_time;
+  }
+
+  if ((curr_time - torrent->last_choke_time) >= CHOKE_INTERVAL) {
+    choke_update(config, torrent);
+    torrent->last_choke_time = curr_time;
   }
 
   for (it = torrent->active_peers; it != 0; it = next) {

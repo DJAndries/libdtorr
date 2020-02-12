@@ -78,7 +78,12 @@ struct dtorr_peer {
 
   dtorr_listnode* out_piece_requests;
   unsigned long sent_request_count;
-  unsigned long total_request_count;
+  unsigned long total_out_request_count;
+
+  dtorr_listnode* in_piece_requests;
+  unsigned long total_in_request_count;
+  unsigned long curr_in_piece_index;
+  char* curr_in_piece;
 };
 typedef struct dtorr_peer dtorr_peer;
 
@@ -103,9 +108,7 @@ struct dtorr_torrent {
 
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
-
-  char** out_piece_buf_map;
-  dtorr_listnode* in_requests;
+  char** in_piece_buf_map;
 
   dtorr_peer me;
   dtorr_listnode* active_peers;
@@ -114,6 +117,7 @@ struct dtorr_torrent {
   char* download_dir;
   unsigned long last_peerstart_time;
   unsigned long last_requester_time;
+  unsigned long last_choke_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 
@@ -121,7 +125,6 @@ struct dtorr_piece_request {
   unsigned long index;
   unsigned long begin;
   unsigned long length;
-  dtorr_peer* peer;
   char request_sent;
 };
 typedef struct dtorr_piece_request dtorr_piece_request;

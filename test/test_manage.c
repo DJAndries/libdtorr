@@ -77,6 +77,8 @@ int main(int argc, char** argv) {
     return 3;
   }
 
+  torrent->bitfield[1099] = torrent->bitfield[1100] = torrent->bitfield[1101] = 1;
+
   for (i = 0; i < 100000000; i++) {
     if (manage_torrent(&config, torrent) != 0) {
       return 1;

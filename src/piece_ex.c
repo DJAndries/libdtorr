@@ -14,7 +14,7 @@ static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
 
   torrent->bitfield[index] = 1;
 
-  if ((hash = SHA1((unsigned char*)torrent->out_piece_buf_map[index], piece_length, 0)) == 0) {
+  if ((hash = SHA1((unsigned char*)torrent->in_piece_buf_map[index], piece_length, 0)) == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Unable to hash/verify piece");
     return 1;
   }
@@ -24,11 +24,11 @@ static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
     return 2;
   }
 
-  if (save_piece(config, torrent, index, torrent->out_piece_buf_map[index], piece_length) != 0) {
+  if (save_piece(config, torrent, index, torrent->in_piece_buf_map[index], piece_length) != 0) {
     return 3;
   }
-  free(torrent->out_piece_buf_map[index]);
-  torrent->out_piece_buf_map[index] = 0;
+  free(torrent->in_piece_buf_map[index]);
+  torrent->in_piece_buf_map[index] = 0;
   /* verify piece, return bad return value if bad */
   return send_have(config, torrent, index);
 }
@@ -41,7 +41,7 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
 
   dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: %lu begin: %lu", index, begin);
 
-  memcpy(torrent->out_piece_buf_map[index] + begin, piece, piece_len);
+  memcpy(torrent->in_piece_buf_map[index] + begin, piece, piece_len);
 
   for (it = peer->out_piece_requests; it != 0; it = next) {
     next = it->next;
@@ -50,7 +50,7 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
       if (it_req->begin == begin) {
         list_remove(&peer->out_piece_requests, it_req);
         peer->sent_request_count--;
-        peer->total_request_count--;
+        peer->total_out_request_count--;
         free(it_req);
       } else {
         is_request_left = 1;

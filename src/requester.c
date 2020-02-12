@@ -21,7 +21,7 @@ long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char rand
 
   for (i = 0; i < torrent->piece_count; i++) {
     if (torrent->bitfield[index] == 0 && peer->bitfield[index] == 1
-      && torrent->out_piece_buf_map[index] == 0) {
+      && torrent->in_piece_buf_map[index] == 0) {
       return index;
     }
     index = (index + 1) % torrent->piece_count;
@@ -62,7 +62,7 @@ static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
   long request_index;
   unsigned long piece_length, piece_length_i, begin;
   dtorr_piece_request* req;
-  if (peer->total_request_count >= MAX_SENT_REQUESTS * 2) {
+  if (peer->total_out_request_count >= MAX_SENT_REQUESTS * 2) {
     return 0;
   }
 
@@ -89,11 +89,11 @@ static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
       free(req);
       return 2;
     }
-    peer->total_request_count++;
+    peer->total_out_request_count++;
   }
 
-  torrent->out_piece_buf_map[request_index] = malloc(sizeof(char) * piece_length);
-  if (torrent->out_piece_buf_map[request_index] == 0) {
+  torrent->in_piece_buf_map[request_index] = malloc(sizeof(char) * piece_length);
+  if (torrent->in_piece_buf_map[request_index] == 0) {
     return 3;
   }
 

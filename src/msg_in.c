@@ -76,14 +76,14 @@ static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_pee
   for (it = peer->out_piece_requests; it != 0; it = next) {
     next = it->next;
     index = ((dtorr_piece_request*)it->value)->index;
-    if (torrent->out_piece_buf_map[index] != 0) {
-      free(torrent->out_piece_buf_map[index]);
-      torrent->out_piece_buf_map[index] = 0;
+    if (torrent->in_piece_buf_map[index] != 0) {
+      free(torrent->in_piece_buf_map[index]);
+      torrent->in_piece_buf_map[index] = 0;
     }
     free(it->value);
     free(it);
   }
-  peer->total_request_count = peer->sent_request_count = 0;
+  peer->total_out_request_count = peer->sent_request_count = 0;
 }
 
 int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long in_len) {
@@ -110,6 +110,7 @@ int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
       return handle_bitfield(config, torrent, peer, in, in_len);
     case MSG_REQUEST:
       /* return handle_request(config, torrent, peer, in, in_len); */
+      break;
     case MSG_PIECE:
       return handle_piece(config, torrent, peer, in, in_len);
     case MSG_CANCEL:

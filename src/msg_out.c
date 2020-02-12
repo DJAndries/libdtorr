@@ -40,6 +40,16 @@ int send_interested_status(dtorr_config* config, dtorr_peer* peer, char interest
   return 0;
 }
 
+int send_choked_status(dtorr_config* config, dtorr_peer* peer, char choked) {
+  char buf = choked == 1 ? 0 : 1;
+
+  if (send_sock_msg(peer->s, &buf, 1) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to send choked update");
+    return 1;
+  }
+  return 0;
+}
+
 int send_have(dtorr_config* config, dtorr_torrent* torrent, unsigned long index) {
   char buf[5];
   dtorr_listnode *it, *next;
