@@ -3,7 +3,7 @@
 #include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
-#include "fs.h"
+#include "dtorr/fs.h"
 
 #define BUF_SIZE 64 * 1024
 

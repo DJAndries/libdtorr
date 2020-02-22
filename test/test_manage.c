@@ -7,7 +7,7 @@
 #include "manager.h"
 #include "state_persist.h"
 #include "util.h"
-#include "fs.h"
+#include "dtorr/fs.h"
 
 volatile sig_atomic_t interrupted = 0;
 
