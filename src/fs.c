@@ -193,7 +193,7 @@ int init_torrent_files(dtorr_config* config, dtorr_torrent* torrent) {
   return 0;
 }
 
-static long save_to_file(dtorr_config* config, char* download_dir, dtorr_file* meta_file, unsigned long file_offset, char* buf, unsigned long buf_size) {
+static long rw_for_file(dtorr_config* config, char* download_dir, dtorr_file* meta_file, unsigned long file_offset, char* buf, unsigned long buf_size, char is_write) {
   char* full_path;
   FILE* f;
   long result;
@@ -213,21 +213,29 @@ static long save_to_file(dtorr_config* config, char* download_dir, dtorr_file* m
     return -3;
   }
   len = (meta_file->length - file_offset) >= buf_size ? buf_size : (meta_file->length - file_offset);
-  dlog(config, LOG_LEVEL_DEBUG, "Writing %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
-  if ((result = fwrite(buf, sizeof(char), len, f)) != len) {
-    fclose(f);
-    return -4;
+  if (is_write == 1) {
+    dlog(config, LOG_LEVEL_DEBUG, "Writing %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
+    if ((result = fwrite(buf, sizeof(char), len, f)) != len) {
+      fclose(f);
+      return -4;
+    }
+  } else {
+    dlog(config, LOG_LEVEL_DEBUG, "Reading %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
+    if ((result = fread(buf, sizeof(char), len, f)) != len) {
+      fclose(f);
+      return -4;
+    }
   }
   fclose(f);
   return result;
 }
 
-int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, char* buf, unsigned long buf_size) {
+int rw_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, char* buf, unsigned long buf_size, char is_write) {
   unsigned long piece_global_offset = torrent->piece_length * index;
   unsigned long i;
   unsigned long file_global_offset = 0;
   unsigned long file_offset;
-  long save_result;
+  long io_result;
   dtorr_file* meta_file;
   for (i = 0; i < torrent->file_count && buf_size != 0; i++) {
 
@@ -236,17 +244,17 @@ int save_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index
     if ((file_global_offset + meta_file->length) > piece_global_offset) {
 
       file_offset = piece_global_offset - file_global_offset;
-      save_result = save_to_file(config, torrent->download_dir, meta_file, file_offset, buf, buf_size);
+      io_result = rw_for_file(config, torrent->download_dir, meta_file, file_offset, buf, buf_size, is_write);
 
-      if (save_result < 0) {
+      if (io_result < 0) {
 
-        dlog(config, LOG_LEVEL_ERROR, "Failed to write to file %s", torrent->files[i]->cat_path);
+        dlog(config, LOG_LEVEL_ERROR, "Failed i/o for file %s", torrent->files[i]->cat_path);
         return 1;
       }
 
-      buf += save_result;
-      buf_size -= save_result;
-      piece_global_offset += save_result;
+      buf += io_result;
+      buf_size -= io_result;
+      piece_global_offset += io_result;
     }
     file_global_offset += meta_file->length;
   } 

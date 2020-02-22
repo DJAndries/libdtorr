@@ -1,9 +1,7 @@
 ## TODO
 
 * tcp server
-* peer protocol
-  * cancel
-  * choking / interested
+* cancel
 * free
   * nodes
   * torrent
@@ -33,3 +31,4 @@
   * request / piece
 * switch socket to non blocking
 * piece verification
+* choking / interested

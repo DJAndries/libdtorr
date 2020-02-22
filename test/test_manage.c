@@ -1,16 +1,24 @@
 #include <stdio.h>
+#include <signal.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 #include "dsock.h"
 #include "tracker.h"
 #include "manager.h"
+#include "state_persist.h"
 #include "util.h"
 #include "fs.h"
 
-dtorr_torrent* load_torrent(dtorr_config* config) {
+volatile sig_atomic_t interrupted = 0;
+
+void intr_func(int sig) {
+  interrupted = 1;
+}
+
+dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
   dtorr_torrent* torrent;
   long size;
-  FILE* fp = fopen("test/torrents/1.torrent", "rb");
+  FILE* fp = fopen(filename, "rb");
   char* contents;
 
   if (fp == 0) {
@@ -39,14 +47,27 @@ dtorr_torrent* load_torrent(dtorr_config* config) {
   return torrent;
 }
 
+int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) {
+  FILE* fp;
+  unsigned long state_len;
+  char* saved_state = save_state(config, torrent, &state_len);
+  if (saved_state == 0) {
+    return 1;
+  }
+  fp = fopen(filename, "wb");
+  fwrite(saved_state, 1, state_len, fp);
+  fclose(fp);
+  return 0;
+}
+
 int main(int argc, char** argv) {
   dtorr_config config;
   dtorr_torrent* torrent;
   unsigned long i;
   char* bitfield;
 
-  if (argc < 2) {
-    printf("Must specify download dir\n");
+  if (argc < 3) {
+    printf("Must specify download dir and torrent\n");
     return 1;
   }
 
@@ -58,7 +79,7 @@ int main(int argc, char** argv) {
   config.log_level = 4;
   config.log_handler = 0;
 
-  torrent = load_torrent(&config);
+  torrent = load_torrent(&config, argv[2]);
   if (torrent == 0) {
     return 2;
   }
@@ -69,17 +90,19 @@ int main(int argc, char** argv) {
   torrent->me.port = 300;
   memcpy(torrent->me.peer_id, "14366678981935567890", 20);
   torrent->download_dir = argv[1];
-  if (init_torrent_files(&config, torrent) != 0) {
-    return 1;
+  if (torrent->bitfield[0] == 0) {
+    if (init_torrent_files(&config, torrent) != 0) {
+      return 1;
+    }
   }
 
   if (tracker_announce(&config, torrent->announce, torrent) != 0) {
     return 3;
   }
 
-  torrent->bitfield[1099] = torrent->bitfield[1100] = torrent->bitfield[1101] = 1;
+  signal(SIGINT, intr_func);
 
-  for (i = 0; i < 100000000; i++) {
+  while (interrupted == 0) {
     if (manage_torrent(&config, torrent) != 0) {
       return 1;
     }
@@ -96,6 +119,8 @@ int main(int argc, char** argv) {
   for (i = 0; i < torrent->piece_count; i++) {
     printf("%d", bitfield[i]);
   }
+
+  persist_state(&config, torrent, "test/torrents/saved_torrent.torrent");
 
   dsock_clean();
 

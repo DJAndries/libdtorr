@@ -85,3 +85,27 @@ int send_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
 
   return 0;
 }
+
+int send_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,dtorr_piece_request* req, char* data) {
+  unsigned long msg_len = sizeof(char) * req->length + 9;
+  char* buf = (char*)malloc(msg_len);
+
+  if (buf == 0) {
+    return 1;
+  }
+
+  buf[0] = 7;
+  uint_to_bigend(buf + 1, (unsigned int)req->index);
+  uint_to_bigend(buf + 5, (unsigned int)req->begin);
+
+  memcpy(buf + 9, data + req->begin, req->length);
+
+  if (send_sock_msg(peer->s, buf, msg_len) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to send piece");
+    peer_close(config, torrent, peer, 0);
+    return 2;
+  }
+  dlog(config, LOG_LEVEL_DEBUG, "Sent piece index %lu begin %lu", req->index, req->begin);
+
+  return 0;
+}

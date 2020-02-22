@@ -13,4 +13,6 @@ int send_have(dtorr_config* config, dtorr_torrent* torrent, unsigned long index)
 
 int send_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, dtorr_piece_request* req);
 
+int send_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,dtorr_piece_request* req, char* data);
+
 #endif

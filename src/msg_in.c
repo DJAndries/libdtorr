@@ -27,6 +27,46 @@ static int handle_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer
   return piece_recv(config, torrent, peer, index, begin, in + 9, in_len - 9);
 }
 
+static int handle_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
+                          char* in, unsigned long in_len) {
+  unsigned int index, begin, length;
+  unsigned long piece_length;
+
+  if (in_len != 13) {
+    dlog(config, LOG_LEVEL_WARN, "Message too small or too big for message request");
+    return 1;
+  }
+
+  if (peer->we_choked == 1) {
+    /* ignore */
+    return 2;
+  }
+
+  index = bigend_to_uint(in + 1);
+  begin = bigend_to_uint(in + 5);
+  length = bigend_to_uint(in + 9);
+
+  if (index >= torrent->piece_count) {
+    dlog(config, LOG_LEVEL_WARN, "Requested piece index exceeds actual piece count");
+    return 3;
+  }
+
+  piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length,
+                                   torrent->length, index);
+
+  if ((begin + length) > piece_length) {
+    dlog(config, LOG_LEVEL_WARN, "Requested piece exceeds actual piece length");
+    return 4;
+  }
+
+  dlog(config, LOG_LEVEL_DEBUG, "Received piece request for index %lu begin %lu", index, begin);
+  if (queue_request(config, peer, index, begin, length) != 0) {
+    return 5;
+  }
+
+  return 0;
+}
+
 static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   char* in, unsigned long in_len) {
 
@@ -83,6 +123,7 @@ static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_pee
     free(it->value);
     free(it);
   }
+  peer->out_piece_requests = 0;
   peer->total_out_request_count = peer->sent_request_count = 0;
 }
 
@@ -109,7 +150,7 @@ int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
       dlog(config, LOG_LEVEL_DEBUG, "Received bitfield");
       return handle_bitfield(config, torrent, peer, in, in_len);
     case MSG_REQUEST:
-      /* return handle_request(config, torrent, peer, in, in_len); */
+      return handle_request(config, torrent, peer, in, in_len);
       break;
     case MSG_PIECE:
       return handle_piece(config, torrent, peer, in, in_len);

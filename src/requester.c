@@ -53,6 +53,7 @@ void interest_update(dtorr_config* config, dtorr_torrent* torrent) {
         peer_close(config, torrent, peer, 0);
         continue;
       }
+      peer->we_interested = interested;
       dlog(config, LOG_LEVEL_DEBUG, "Sent interested status: %d", interested);
     }
   }

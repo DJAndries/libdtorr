@@ -49,6 +49,7 @@ void choke_update(dtorr_config* config, dtorr_torrent* torrent) {
       if (choke(config, torrent, peer) != 0) {
         continue;
       }
+      peer->we_choked = 1;
     }
     if (peer->they_interested == 1) {
       interested_count++;
@@ -63,7 +64,7 @@ void choke_update(dtorr_config* config, dtorr_torrent* torrent) {
   for (it = torrent->active_peers; it != 0 && unchoked_count < MAX_UPLOAD_PEERS; it = next) {
     next = it->next;
     peer = (dtorr_peer*)it->value;
-    should_choke = rand() < unchoke_threshold;
+    should_choke = rand() < unchoke_threshold && interested_count > MAX_UPLOAD_PEERS;
     if (peer->they_interested == 1 && peer->we_choked == 1 && should_choke == 0) {
       dlog(config, LOG_LEVEL_DEBUG, "Unchoking peer because they are interested");
       peer->we_choked = 0;

@@ -7,6 +7,7 @@
 #include "stream.h"
 #include "choke.h"
 #include "close.h"
+#include "piece_ex.h"
 #include "log.h"
 #include "util.h"
 
@@ -95,6 +96,9 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
     }
   }
 
+  if (pieces_send(config, torrent) != 0) {
+    return 3;
+  }
 
   return 0;
 }
