@@ -27,8 +27,6 @@ static int verify_hash(dtorr_config* config, dtorr_torrent* torrent, char* buf, 
 static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, unsigned long index) {
   unsigned long piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
 
-  torrent->bitfield[index] = 1;
-
   if (verify_hash(config, torrent, torrent->in_piece_buf_map[index], index, piece_length) != 0) {
     return 1;
   }
@@ -36,8 +34,16 @@ static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
   if (rw_piece(config, torrent, index, torrent->in_piece_buf_map[index], piece_length, 1) != 0) {
     return 3;
   }
-  free(torrent->in_piece_buf_map[index]);
-  torrent->in_piece_buf_map[index] = 0;
+
+  torrent->bitfield[index] = 1;
+  torrent->downloaded += piece_length;
+  torrent->downloaded_interval += piece_length;
+
+  if (torrent->in_piece_buf_map[index] != 0) {
+    free(torrent->in_piece_buf_map[index]);
+    torrent->in_piece_buf_map[index] = 0;
+  }
+
   return send_have(config, torrent, index);
 }
 
@@ -48,6 +54,11 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   char is_request_left = 0;
 
   dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: %lu begin: %lu", index, begin);
+
+  if (torrent->in_piece_buf_map[index] == 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Recv piece that was not requested");
+    return 1;
+  }
 
   memcpy(torrent->in_piece_buf_map[index] + begin, piece, piece_len);
 
@@ -139,6 +150,9 @@ int pieces_send(dtorr_config* config, dtorr_torrent* torrent) {
     if (send_piece(config, torrent, peer, req, peer->curr_in_piece) != 0) {
       continue;
     }
+
+    torrent->uploaded += req->length;
+    torrent->uploaded_interval += req->length;
 
     peer->in_piece_requests = piece_node->next;
     free(piece_node);

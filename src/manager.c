@@ -13,13 +13,14 @@
 #include "util.h"
 
 #define MAX_CONNECTIONS 20
-#define START_PEERS_INTERVAL 10000
+#define START_PEERS_INTERVAL 5000
 #define REQUESTER_INTERVAL 500
 #define CHOKE_INTERVAL 750
-#define ANNOUNCE_INTERVAL 3600 * 1000
+#define ANNOUNCE_INTERVAL 1800 * 1000
+#define METRICS_INTERVAL 3000
 #define MSG_BUF_SIZE 32 * 1024
 
-int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
+static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
   unsigned long i;
   dtorr_hashnode** peer_entries;
   dtorr_peer* peer;
@@ -50,8 +51,18 @@ int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
   return 0;
 }
 
+static void calc_metrics(dtorr_config* config, dtorr_torrent* torrent, unsigned long interval_time) {
+  torrent->download_rate = torrent->downloaded_interval / (interval_time / 1000.0);
+  torrent->upload_rate = torrent->uploaded_interval / (interval_time / 1000.0);
+  dlog(config, LOG_LEVEL_DEBUG, "Download rate: %lu kbps Upload rate: %lu kbps",
+       torrent->download_rate / 1000, torrent->upload_rate / 1000);
+  torrent->downloaded_interval = 0;
+  torrent->uploaded_interval = 0;
+}
+
 static int interval_tasks(dtorr_config* config, dtorr_torrent* torrent) {
   unsigned long curr_time = get_time_ms();
+  unsigned long metrics_time;
 
   if ((curr_time - torrent->last_peerstart_time) >= START_PEERS_INTERVAL) {
     dlog(config, LOG_LEVEL_DEBUG, "Peerstarts at %lu ms", curr_time);
@@ -78,6 +89,13 @@ static int interval_tasks(dtorr_config* config, dtorr_torrent* torrent) {
     tracker_announce(config, torrent->announce, torrent);
     torrent->last_announce_time = curr_time;
   }
+
+  metrics_time = curr_time - torrent->last_metrics_time;
+  if (metrics_time >= METRICS_INTERVAL) {
+    calc_metrics(config, torrent, metrics_time);
+    torrent->last_metrics_time = curr_time;
+  }
+
   return 0;
 }
 

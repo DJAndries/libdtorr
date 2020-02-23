@@ -104,7 +104,11 @@ struct dtorr_torrent {
   dtorr_node* decoded;
 
   unsigned long downloaded;
+  unsigned long download_rate;
+  unsigned long downloaded_interval;
   unsigned long uploaded;
+  unsigned long upload_rate;
+  unsigned long uploaded_interval;
 
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
@@ -119,6 +123,7 @@ struct dtorr_torrent {
   unsigned long last_requester_time;
   unsigned long last_choke_time;
   unsigned long last_announce_time;
+  unsigned long last_metrics_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 
