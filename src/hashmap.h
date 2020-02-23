@@ -4,6 +4,8 @@
 #include "dtorr/structs.h"
 #include "log.h"
 
+#define DEFAULT_HASHMAP_SIZE 512
+
 dtorr_hashmap* hashmap_init(unsigned long size);
 
 int hashmap_insert(dtorr_hashmap* map, char* key, void* value);

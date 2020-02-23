@@ -297,6 +297,11 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
   }
   memset(result->in_piece_buf_map, 0, sizeof(char*) * result->piece_count);
 
+  if ((result->peer_map = hashmap_init(DEFAULT_HASHMAP_SIZE)) == 0) {
+    free_torrent(result);
+    return 0;
+  }
+
   parse_state(config, result);
 
   return result;

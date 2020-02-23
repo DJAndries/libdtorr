@@ -118,6 +118,7 @@ struct dtorr_torrent {
   unsigned long last_peerstart_time;
   unsigned long last_requester_time;
   unsigned long last_choke_time;
+  unsigned long last_announce_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 

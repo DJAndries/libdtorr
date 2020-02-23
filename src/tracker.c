@@ -9,7 +9,6 @@
 
 #define RECV_BUFF_SIZE 64 * 1024
 #define SEND_BUFF_SIZE 4096
-#define HASHMAP_SIZE 512
 
 static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri, dtorr_node* peer_str) {
   unsigned long i;
@@ -116,11 +115,9 @@ static int process_response(dtorr_config* config, dtorr_torrent* torrent, char* 
   response_dict = bencoding_decode(config, response_dict_txt, recvlen - (response_dict_txt - recvbuf));
 
   if (torrent->tracker_interval_map == 0) {
-    torrent->tracker_interval_map = hashmap_init(HASHMAP_SIZE);
+    torrent->tracker_interval_map = hashmap_init(DEFAULT_HASHMAP_SIZE);
   }
-  if (torrent->peer_map == 0) {
-    torrent->peer_map = hashmap_init(HASHMAP_SIZE);
-  }
+  
   if (torrent->tracker_interval_map == 0 || torrent->peer_map == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce: Failed to init peer or tracker interval maps");
     /* free node */

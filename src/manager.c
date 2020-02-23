@@ -1,4 +1,4 @@
-#include "manager.h"
+#include "dtorr/manager.h"
 #include "msg_out.h"
 #include "msg_in.h"
 #include "hashmap.h"
@@ -8,6 +8,7 @@
 #include "choke.h"
 #include "close.h"
 #include "piece_ex.h"
+#include "tracker.h"
 #include "log.h"
 #include "util.h"
 
@@ -15,6 +16,7 @@
 #define START_PEERS_INTERVAL 10000
 #define REQUESTER_INTERVAL 500
 #define CHOKE_INTERVAL 750
+#define ANNOUNCE_INTERVAL 3600 * 1000
 #define MSG_BUF_SIZE 32 * 1024
 
 int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
@@ -48,14 +50,7 @@ int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
   return 0;
 }
 
-int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
-  dtorr_listnode* it;
-  dtorr_listnode* next;
-  dtorr_peer* peer;
-  char buf[MSG_BUF_SIZE];
-  unsigned long msg_len;
-  int read_result;
-
+static int interval_tasks(dtorr_config* config, dtorr_torrent* torrent) {
   unsigned long curr_time = get_time_ms();
 
   if ((curr_time - torrent->last_peerstart_time) >= START_PEERS_INTERVAL) {
@@ -77,6 +72,25 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
   if ((curr_time - torrent->last_choke_time) >= CHOKE_INTERVAL) {
     choke_update(config, torrent);
     torrent->last_choke_time = curr_time;
+  }
+
+  if ((curr_time - torrent->last_announce_time >= ANNOUNCE_INTERVAL)) {
+    tracker_announce(config, torrent->announce, torrent);
+    torrent->last_announce_time = curr_time;
+  }
+  return 0;
+}
+
+int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
+  dtorr_listnode* it;
+  dtorr_listnode* next;
+  dtorr_peer* peer;
+  char buf[MSG_BUF_SIZE];
+  unsigned long msg_len;
+  int read_result;
+
+  if (interval_tasks(config, torrent) != 0) {
+    return 1;
   }
 
   for (it = torrent->active_peers; it != 0; it = next) {

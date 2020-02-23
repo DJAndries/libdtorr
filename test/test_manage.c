@@ -3,8 +3,7 @@
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 #include "dsock.h"
-#include "tracker.h"
-#include "manager.h"
+#include "dtorr/manager.h"
 #include "state_persist.h"
 #include "util.h"
 #include "dtorr/fs.h"
@@ -94,10 +93,6 @@ int main(int argc, char** argv) {
     if (init_torrent_files(&config, torrent) != 0) {
       return 1;
     }
-  }
-
-  if (tracker_announce(&config, torrent->announce, torrent) != 0) {
-    return 3;
   }
 
   signal(SIGINT, intr_func);
