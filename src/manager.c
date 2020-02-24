@@ -25,7 +25,7 @@ static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
   dtorr_hashnode** peer_entries;
   dtorr_peer* peer;
 
-  if (torrent->active_peer_count >= MAX_CONNECTIONS) {
+  if (torrent->active_peer_count >= MAX_CONNECTIONS || torrent->downloaded == torrent->length) {
     return 0;
   }
 
@@ -47,7 +47,7 @@ static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
     }
     dlog(config, LOG_LEVEL_DEBUG, "Handshake & bitfield send ok");
   }
-  
+
   return 0;
 }
 
