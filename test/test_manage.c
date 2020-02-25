@@ -4,7 +4,7 @@
 #include "dtorr/metadata.h"
 #include "dsock.h"
 #include "dtorr/manager.h"
-#include "state_persist.h"
+#include "dtorr/state_persist.h"
 #include "util.h"
 #include "dtorr/fs.h"
 

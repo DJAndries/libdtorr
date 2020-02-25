@@ -21,7 +21,7 @@ SOCKET dsock_connect_uri(parsed_uri* uri);
 SOCKET dsock_connect(char* host, unsigned short port);
 
 int dsock_set_sock_nonblocking(SOCKET s);
-  
+
 SOCKET dsock_close(SOCKET s);
 
 int dsock_clean();

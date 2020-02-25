@@ -2,7 +2,7 @@
 #include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
-#include "state_persist.h"
+#include "dtorr/state_persist.h"
 #include "dsock.h"
 #include "tracker.h"
 
@@ -75,6 +75,9 @@ int main(int argc, char** argv) {
   }
   torrent->download_dir = argv[1];
   torrent->bitfield[2] = torrent->bitfield[10] = torrent->bitfield[20] = 1;
+  torrent->downloaded = 32000;
+  torrent->uploaded = 16000;
+
   if (persist_state(&config, torrent, "test/torrents/test_state.torrent") != 0) {
     return 3;
   }
@@ -89,6 +92,8 @@ int main(int argc, char** argv) {
   for (i = 0; i < torrent_with_state->piece_count; i++) {
     printf("%d", torrent_with_state->bitfield[i]);
   }
+  printf("\nDownloaded: %lu\n", torrent_with_state->downloaded);
+  printf("Uploaded: %lu\n", torrent_with_state->uploaded);
   printf("\n");
 
   dsock_clean();

@@ -48,12 +48,6 @@ struct dtorr_config {
 };
 typedef struct dtorr_config dtorr_config;
 
-struct dtorr_ctx {
-  dtorr_config* config;
-
-};
-typedef struct dtorr_ctx dtorr_ctx;
-
 struct dtorr_file {
   dtorr_node* path;
   char* cat_path;

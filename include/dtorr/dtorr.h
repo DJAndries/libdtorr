@@ -3,8 +3,8 @@
 
 #include "structs.h"
 
-dtorr_ctx* dtorr_init(dtorr_config* config);
+int dtorr_init();
 
-void dtorr_free(dtorr_ctx* ctx);
+void mfree(void* ptr);
 
 #endif
