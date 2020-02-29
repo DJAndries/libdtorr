@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   torrent->me.port = 300;
   memcpy(torrent->me.peer_id, "14366678981935567890", 20);
 
-  if (peer_handshake(&config, torrent, target) != 0) {
+  if (peer_send_handshake(&config, torrent, target) != 0) {
     return 1;
   }
 

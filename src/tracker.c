@@ -4,6 +4,7 @@
 #include "uri.h"
 #include "dtorr/bencoding_decode.h"
 #include "hashmap.h"
+#include "peer.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,40 +13,27 @@
 
 static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri, dtorr_node* peer_str) {
   unsigned long i;
-  dtorr_peer* peer;
-  char ip_and_port[128];
+  char ip[128];
+  unsigned short port;
 
   if (peer_str == 0 || peer_str->type != DTORR_STR || peer_str->len % 6 != 0) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce: peers string not available or is not compact format");
     return 1;
   }
   for (i = 0; i < peer_str->len; i += 6) {
-    peer = (dtorr_peer*)malloc(sizeof(dtorr_peer));
-    if (peer == 0) {
-      dlog(config, LOG_LEVEL_ERROR, "Tracker announce: failed to allocate peer"); 
-      return 2;
-    }
-    memset(peer, 0, sizeof(dtorr_peer));
-    strcpy(peer->ip, inet_ntoa(*((in_addr*)(peer_str->value + i))));
-    
-    peer->port = (*((char*)peer_str->value + i + 4) & 0xFF) << 8;
-    peer->port |= *((char*)peer_str->value + i + 5) & 0xFF;
+    strcpy(ip, inet_ntoa(*((in_addr*)(peer_str->value + i))));
+    port = (*((char*)peer_str->value + i + 4) & 0xFF) << 8;
+    port |= *((char*)peer_str->value + i + 5) & 0xFF;
 
     /* compare ip in prod */
-    if (peer->port == torrent->me.port) {
-      free(peer);
+    if (port == torrent->me.port) {
       continue;
     }
-    
-    sprintf(ip_and_port, "%s:%u", peer->ip, peer->port);
-    if (hashmap_get(torrent->peer_map, ip_and_port) == 0) {
-      dlog(config, LOG_LEVEL_DEBUG, "Tracker announce: discovered peer %s", ip_and_port);
-      if (hashmap_insert(torrent->peer_map, ip_and_port, peer) != 0) {
-        dlog(config, LOG_LEVEL_ERROR, "Tracker announce: failed to place peer in map"); 
-        free(peer);
-        return 3;
-      }
+
+    if (peer_get_or_create(config, torrent, ip, port) == 0) {
+      return 2;
     }
+    dlog(config, LOG_LEVEL_DEBUG, "Tracker announce: discovered peer %s:%hu", ip, port);
   }
   return 0;
 }

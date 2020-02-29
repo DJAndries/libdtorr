@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <signal.h>
+#include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
+#include "dtorr/server.h"
 #include "dsock.h"
 #include "dtorr/manager.h"
 #include "dtorr/state_persist.h"
@@ -9,13 +11,14 @@
 #include "dtorr/fs.h"
 
 volatile sig_atomic_t interrupted = 0;
+dtorr_torrent* torrent;
 
 void intr_func(int sig) {
   interrupted = 1;
 }
 
 dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
-  dtorr_torrent* torrent;
+  dtorr_torrent* result;
   long size;
   FILE* fp = fopen(filename, "rb");
   char* contents;
@@ -35,15 +38,15 @@ dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
 
   contents[size] = 0;
 
-  torrent = load_torrent_metadata(config, contents, (unsigned long)size);
-  if (torrent == 0) {
+  result = load_torrent_metadata(config, contents, (unsigned long)size);
+  if (result == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 0;
   }
 
   free(contents);
 
-  return torrent;
+  return result;
 }
 
 int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) {
@@ -59,14 +62,20 @@ int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) 
   return 0;
 }
 
+dtorr_torrent* torrent_lookup(char* infohash) {
+  if (memcmp(infohash, torrent->infohash, 20) == 0) {
+    return torrent;
+  }
+  return 0;
+}
+
 int main(int argc, char** argv) {
   dtorr_config config;
-  dtorr_torrent* torrent;
   unsigned long i;
   char* bitfield;
 
-  if (argc < 3) {
-    printf("Must specify download dir and torrent\n");
+  if (argc < 5) {
+    printf("Must specify download dir, torrent, torrent save location, port\n");
     return 1;
   }
 
@@ -77,6 +86,8 @@ int main(int argc, char** argv) {
 
   config.log_level = 4;
   config.log_handler = 0;
+  sscanf(argv[4], "%hu", &config.port);
+  config.torrent_lookup = torrent_lookup;
 
   torrent = load_torrent(&config, argv[2]);
   if (torrent == 0) {
@@ -86,7 +97,7 @@ int main(int argc, char** argv) {
   torrent->downloaded = 1;
 
   sprintf(torrent->me.ip, "192.168.0.1");
-  torrent->me.port = 300;
+  torrent->me.port = config.port;
   memcpy(torrent->me.peer_id, "14366678981935567890", 20);
   torrent->download_dir = argv[1];
   if (torrent->bitfield[0] == 0) {
@@ -95,9 +106,14 @@ int main(int argc, char** argv) {
     }
   }
 
+  if (peer_server_start(&config) != 0) {
+    return 1;
+  }
+
   signal(SIGINT, intr_func);
 
   while (interrupted == 0) {
+    peer_server_accept(&config);
     if (manage_torrent(&config, torrent) != 0) {
       return 1;
     }
@@ -115,7 +131,7 @@ int main(int argc, char** argv) {
     printf("%d", bitfield[i]);
   }
 
-  persist_state(&config, torrent, "test/torrents/saved_torrent.torrent");
+  persist_state(&config, torrent, argv[3]);
 
   dsock_clean();
 

@@ -6,6 +6,7 @@
   #include <winsock2.h>
   #include <ws2tcpip.h>
   #define addrinfo ADDRINFOA
+  #define sockaddr SOCKADDR
   #define sockaddr_in SOCKADDR_IN
   #define sockaddr_in6 SOCKADDR_IN6
   #define in_addr IN_ADDR
@@ -19,6 +20,8 @@ int dsock_init();
 SOCKET dsock_connect_uri(parsed_uri* uri);
 
 SOCKET dsock_connect(char* host, unsigned short port);
+
+SOCKET dsock_start_server(unsigned short port);
 
 int dsock_set_sock_nonblocking(SOCKET s);
 

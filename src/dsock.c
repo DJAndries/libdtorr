@@ -6,6 +6,8 @@
   #include <fcntl.h>
 #endif
 
+#define MAX_INC_CONN 16
+
 int dsock_init() {
   #ifdef _WIN32
     WSADATA data;
@@ -38,8 +40,8 @@ static SOCKET connect_helper(char* host, unsigned short port, char* schema) {
     s = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 
     if (s == INVALID_SOCKET) {
-      return INVALID_SOCKET;
-    } 
+      return s;
+    }
 
     if (connect(s, result->ai_addr, result->ai_addrlen) == 0) {
       return s;
@@ -56,6 +58,35 @@ SOCKET dsock_connect_uri(parsed_uri* uri) {
 
 SOCKET dsock_connect(char* host, unsigned short port) {
   return connect_helper(host, port, 0);
+}
+
+SOCKET dsock_start_server(unsigned short port) {
+  SOCKET s;
+  sockaddr_in bind_addr;
+
+  bind_addr.sin_family = AF_INET;
+  bind_addr.sin_port = htons(port);
+  bind_addr.sin_addr.s_addr = INADDR_ANY;
+  memset(bind_addr.sin_zero, 0, 8);
+
+  s = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (s == INVALID_SOCKET) {
+    return s;
+  }
+
+  if (bind(s, (sockaddr*)&bind_addr, sizeof(sockaddr_in)) != 0) {
+    return INVALID_SOCKET;
+  }
+
+  if (listen(s, MAX_INC_CONN) != 0) {
+    return dsock_close(s);
+  }
+
+  if (dsock_set_sock_nonblocking(s) != 0) {
+    return dsock_close(s);
+  }
+  return s;
 }
 
 int dsock_set_sock_nonblocking(SOCKET s) {

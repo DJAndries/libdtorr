@@ -41,7 +41,7 @@ static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
     if (peer->bad == 1 || peer->active == 1) {
       continue;
     }
-    if (peer_handshake(config, torrent, peer) != 0 || send_bitfield(config, torrent, peer) != 0) {
+    if (peer_send_handshake(config, torrent, peer) != 0) {
       peer_close(config, torrent, peer, 1);
       continue;
     }

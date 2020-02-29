@@ -42,12 +42,6 @@ struct dtorr_listnode {
   dtorr_listnode* next;
 };
 
-struct dtorr_config {
-  int log_level;
-  void (*log_handler)(int, char*);
-};
-typedef struct dtorr_config dtorr_config;
-
 struct dtorr_file {
   dtorr_node* path;
   char* cat_path;
@@ -120,6 +114,17 @@ struct dtorr_torrent {
   unsigned long last_metrics_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
+
+struct dtorr_config {
+  int log_level;
+  void (*log_handler)(int, char*);
+
+  dtorr_torrent* (*torrent_lookup)(char*);
+
+  unsigned short port;
+  SOCKET serv_sock;
+};
+typedef struct dtorr_config dtorr_config;
 
 struct dtorr_piece_request {
   unsigned long index;

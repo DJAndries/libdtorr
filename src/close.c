@@ -20,7 +20,7 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
 
   peer->total_out_request_count = peer->sent_request_count = 0;
   memset(peer->peer_id, 0, 20);
-  
+
   if (peer->bitfield != 0) {
     free(peer->bitfield);
     peer->bitfield = 0;
@@ -32,7 +32,7 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
       free(torrent->in_piece_buf_map[index]);
       torrent->in_piece_buf_map[index] = 0;
     }
-  }  
+  }
   list_free(peer->out_piece_requests, 1);
   peer->out_piece_requests = 0;
 

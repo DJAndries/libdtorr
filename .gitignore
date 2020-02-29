@@ -2,3 +2,5 @@ obj/*
 bin/*
 lib/*
 test/torrents/test_state.torrent
+test/torrents/saved*
+.projectile
