@@ -7,6 +7,7 @@
 #endif
 
 #define MAX_INC_CONN 16
+#define CONNECT_TIMEOUT 500
 
 int dsock_init() {
   #ifdef _WIN32
@@ -17,11 +18,26 @@ int dsock_init() {
   #endif
 }
 
+static int dsock_errno() {
+  #if _WIN32
+    return WSAGetLastError();
+  #else
+    return errno;
+  #endif
+}
+
 static SOCKET connect_helper(char* host, unsigned short port, char* schema) {
   SOCKET s;
   addrinfo hints;
   addrinfo* result;
+  int res;
   char port_str[16];
+
+  struct timeval timeout;
+  fd_set writefds;
+
+  timeout.tv_sec = 0;
+  timeout.tv_usec = CONNECT_TIMEOUT * 1000;
 
   if (port != 0) {
     sprintf(port_str, "%u", port);
@@ -43,8 +59,21 @@ static SOCKET connect_helper(char* host, unsigned short port, char* schema) {
       return s;
     }
 
-    if (connect(s, result->ai_addr, result->ai_addrlen) == 0) {
+    if (dsock_set_sock_nonblocking(s) != 0) {
+      return INVALID_SOCKET;
+    }
+
+    FD_ZERO(&writefds);
+    FD_SET(s, &writefds);
+
+    res = connect(s, result->ai_addr, result->ai_addrlen);
+
+    if (res == 0) {
       return s;
+    } else if (dsock_errno() == EINPROGRESS) {
+      if (select(s + 1, 0, &writefds, 0, &timeout) == 1) {
+        return s;
+      }
     }
 
     dsock_close(s);
@@ -58,6 +87,23 @@ SOCKET dsock_connect_uri(parsed_uri* uri) {
 
 SOCKET dsock_connect(char* host, unsigned short port) {
   return connect_helper(host, port, 0);
+}
+
+int dsock_recv_timeout(SOCKET s, char* buf, unsigned long buf_size, unsigned int ms_wait) {
+  struct timeval timeout;
+  fd_set readfds;
+
+  FD_ZERO(&readfds);
+  FD_SET(s, &readfds);
+
+  timeout.tv_sec = 0;
+  timeout.tv_usec = ms_wait * 1000;
+
+  if (select(s + 1, &readfds, 0, 0, &timeout) == 0) {
+    return 0;
+  }
+
+  return recv(s, buf, buf_size, 0);
 }
 
 SOCKET dsock_start_server(unsigned short port) {

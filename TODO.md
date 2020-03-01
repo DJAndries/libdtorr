@@ -1,18 +1,15 @@
 ## TODO
 
-* tcp server
 * cancel
 * free
   * nodes
   * torrent
 * dht
-* upnp in another project that consumes this library
 * visiblity=hidden
 * bsd sock support for network layer
 * tracker intervals
 * support init for nested dirs
 * keepalives
-* reassign half done pieces to another peer
 * check socket buffer avail before sending
 * connect timeout
 
@@ -32,3 +29,4 @@
 * switch socket to non blocking
 * piece verification
 * choking / interested
+* tcp server

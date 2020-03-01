@@ -162,7 +162,7 @@ static int send_and_receive(dtorr_config* config, parsed_uri* parsed, dtorr_torr
   
   free_parsed_uri(parsed);
 
-  *recvlen = recv(s, recvbuf, RECV_BUFF_SIZE, MSG_WAITALL);
+  *recvlen = dsock_recv_timeout(s, recvbuf, RECV_BUFF_SIZE, 750);
   if (*recvlen == 0 || *recvlen == RECV_BUFF_SIZE) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce recv failure. Did not receive or received too much");
     dsock_close(s);

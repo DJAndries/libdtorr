@@ -28,7 +28,7 @@ static int send_header(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer*
 }
 
 static int recv_header(dtorr_config* config, char* msg, SOCKET s) {
-  if (recv(s, msg, BT_HS_LEN, MSG_WAITALL) != BT_HS_LEN) {
+  if (dsock_recv_timeout(s, msg, BT_HS_LEN, 500) != BT_HS_LEN) {
     dlog(config, LOG_LEVEL_ERROR, "Invalid recv header size");
     return 1;
   }
@@ -97,12 +97,6 @@ int peer_send_handshake(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer
 
   memcpy(peer->peer_id, msg + BT_HEADER_LEN + 20, 20);
 
-  if (dsock_set_sock_nonblocking(peer->s) != 0) {
-    dlog(config, LOG_LEVEL_ERROR, "Fail to set socket as non blocking");
-    peer->s = dsock_close(peer->s);
-    return 6;
-  }
-
   if (insert_active_peer(config, torrent, peer) != 0) {
     peer->s = dsock_close(peer->s);
     return 7;
@@ -123,9 +117,6 @@ int peer_recv_handshake(dtorr_config* config, SOCKET s, char* ip, unsigned short
 
   dtorr_peer* peer;
   dtorr_torrent* torrent;
-
-  unsigned long mode = 0;
-  ioctlsocket(s, FIONBIO, &mode);
 
   if (recv_header(config, msg, s) != 0) {
     dsock_close(s);
@@ -150,12 +141,6 @@ int peer_recv_handshake(dtorr_config* config, SOCKET s, char* ip, unsigned short
   if (send_header(config, torrent, peer) != 0) {
     dsock_close(s);
     return 4;
-  }
-
-  if (dsock_set_sock_nonblocking(s) != 0) {
-    dlog(config, LOG_LEVEL_ERROR, "Fail to set socket as non blocking");
-    dsock_close(s);
-    return 5;
   }
 
   if (insert_active_peer(config, torrent, peer) != 0) {

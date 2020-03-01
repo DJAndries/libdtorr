@@ -10,6 +10,7 @@
   #define sockaddr_in SOCKADDR_IN
   #define sockaddr_in6 SOCKADDR_IN6
   #define in_addr IN_ADDR
+  #define EINPROGRESS WSAEINPROGRESS || WSAEWOULDBLOCK
 #else
   #include <sys/socket.h>
   #define INVALID_SOCKET -1
@@ -24,6 +25,8 @@ SOCKET dsock_connect(char* host, unsigned short port);
 SOCKET dsock_start_server(unsigned short port);
 
 int dsock_set_sock_nonblocking(SOCKET s);
+
+int dsock_recv_timeout(SOCKET s, char* buf, unsigned long buf_size, unsigned int ms_wait);
 
 SOCKET dsock_close(SOCKET s);
 

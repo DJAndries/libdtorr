@@ -28,6 +28,10 @@ int peer_server_accept(dtorr_config* config) {
   conn_port = ntohs(conn_info.sin_port);
   conn_ip = inet_ntoa(conn_info.sin_addr);
 
+  if (dsock_set_sock_nonblocking(conn_sock) != 0) {
+    return 1;
+  }
+
   dlog(config, LOG_LEVEL_INFO, "Accepted connection from %s:%hu", conn_ip, conn_port);
 
   return peer_recv_handshake(config, conn_sock, conn_ip, conn_port);
