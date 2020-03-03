@@ -11,7 +11,9 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
   if (peer->s != INVALID_SOCKET) {
     peer->s = dsock_close(peer->s);
   }
-  torrent->active_peer_count--;
+  if (torrent->active_peer_count > 0) {
+    torrent->active_peer_count--;
+  }
   peer->active = 0;
   peer->bad = bad;
 
