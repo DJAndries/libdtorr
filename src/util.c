@@ -25,13 +25,13 @@ void uint_to_bigend(char* buf, unsigned int val) {
   }
 }
 
-unsigned long get_time_ms() {
+unsigned long long get_time_ms() {
   struct timeval curr_time;
   gettimeofday(&curr_time, 0);
   return (curr_time.tv_sec * 1000) + (curr_time.tv_usec / 1000);
 }
 
-void dsleep(unsigned long ms) {
+void dsleep(unsigned long long ms) {
   #ifndef _WIN32
     usleep(ms * 1000);
   #else
@@ -39,6 +39,6 @@ void dsleep(unsigned long ms) {
   #endif
 }
 
-unsigned long calc_piece_length(unsigned long piece_count, unsigned long piece_length, unsigned long total_length, unsigned long index) {
+unsigned long long calc_piece_length(unsigned long long piece_count, unsigned long long piece_length, unsigned long long total_length, unsigned long long index) {
   return (index + 1) == piece_count ? total_length - (index * piece_length) : piece_length;
 }

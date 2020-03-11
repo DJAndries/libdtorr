@@ -4,7 +4,7 @@
 #define DTORR_DICT 1 /* dtorr_hashmap */
 #define DTORR_STR 2 /* char* */
 #define DTORR_LIST 3 /* dtorr_node** */
-#define DTORR_NUM 4 /* long */
+#define DTORR_NUM 4 /* long long */
 
 #ifndef _WIN32
 #ifndef SOCKET
@@ -19,7 +19,7 @@ typedef unsigned SOCKET;
 struct dtorr_node {
   int type;
   void* value;
-  unsigned long len;
+  unsigned long long len;
 };
 typedef struct dtorr_node dtorr_node;
 
@@ -31,8 +31,8 @@ typedef struct dtorr_hashnode dtorr_hashnode;
 
 struct dtorr_hashmap {
   dtorr_hashnode** elements;
-  unsigned long map_size;
-  unsigned long entry_count;
+  unsigned long long map_size;
+  unsigned long long entry_count;
 };
 typedef struct dtorr_hashmap dtorr_hashmap;
 
@@ -45,7 +45,7 @@ struct dtorr_listnode {
 struct dtorr_file {
   dtorr_node* path;
   char* cat_path;
-  unsigned long length;
+  unsigned long long length;
 };
 typedef struct dtorr_file dtorr_file;
 
@@ -65,12 +65,12 @@ struct dtorr_peer {
   char* bitfield;
 
   dtorr_listnode* out_piece_requests;
-  unsigned long sent_request_count;
-  unsigned long total_out_request_count;
+  unsigned long long sent_request_count;
+  unsigned long long total_out_request_count;
 
   dtorr_listnode* in_piece_requests;
-  unsigned long total_in_request_count;
-  unsigned long curr_in_piece_index;
+  unsigned long long total_in_request_count;
+  unsigned long long curr_in_piece_index;
   char* curr_in_piece;
 };
 typedef struct dtorr_peer dtorr_peer;
@@ -78,25 +78,25 @@ typedef struct dtorr_peer dtorr_peer;
 struct dtorr_torrent {
   char* announce;
   char* name;
-  unsigned long piece_length;
+  unsigned long long piece_length;
   char* pieces;
-  unsigned long piece_count;
-  unsigned long length;
+  unsigned long long piece_count;
+  unsigned long long length;
 
   dtorr_file** files;
-  unsigned long file_count;
+  unsigned long long file_count;
 
   char infohash[20];
   char* bitfield;
 
   dtorr_node* decoded;
 
-  unsigned long downloaded;
-  unsigned long download_rate;
-  unsigned long downloaded_interval;
-  unsigned long uploaded;
-  unsigned long upload_rate;
-  unsigned long uploaded_interval;
+  unsigned long long downloaded;
+  unsigned long long download_rate;
+  unsigned long long downloaded_interval;
+  unsigned long long uploaded;
+  unsigned long long upload_rate;
+  unsigned long long uploaded_interval;
 
   dtorr_hashmap* tracker_interval_map;
   dtorr_hashmap* peer_map;
@@ -104,14 +104,14 @@ struct dtorr_torrent {
 
   dtorr_peer me;
   dtorr_listnode* active_peers;
-  unsigned long active_peer_count;
+  unsigned long long active_peer_count;
 
   char* download_dir;
-  unsigned long last_peerstart_time;
-  unsigned long last_requester_time;
-  unsigned long last_choke_time;
-  unsigned long last_announce_time;
-  unsigned long last_metrics_time;
+  unsigned long long last_peerstart_time;
+  unsigned long long last_requester_time;
+  unsigned long long last_choke_time;
+  unsigned long long last_announce_time;
+  unsigned long long last_metrics_time;
 };
 typedef struct dtorr_torrent dtorr_torrent;
 
@@ -127,9 +127,9 @@ struct dtorr_config {
 typedef struct dtorr_config dtorr_config;
 
 struct dtorr_piece_request {
-  unsigned long index;
-  unsigned long begin;
-  unsigned long length;
+  unsigned long long index;
+  unsigned long long begin;
+  unsigned long long length;
   char request_sent;
 };
 typedef struct dtorr_piece_request dtorr_piece_request;

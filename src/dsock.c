@@ -89,7 +89,7 @@ SOCKET dsock_connect(char* host, unsigned short port) {
   return connect_helper(host, port, 0);
 }
 
-int dsock_recv_timeout(SOCKET s, char* buf, unsigned long buf_size, unsigned int ms_wait) {
+int dsock_recv_timeout(SOCKET s, char* buf, unsigned long long buf_size, unsigned int ms_wait) {
   struct timeval timeout;
   fd_set readfds;
 

@@ -6,7 +6,7 @@
 #include "util.h"
 
 static int handle_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-  char* in, unsigned long in_len) {
+  char* in, unsigned long long in_len) {
 
   unsigned int index;
   unsigned int begin;
@@ -28,9 +28,9 @@ static int handle_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer
 }
 
 static int handle_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-                          char* in, unsigned long in_len) {
+                          char* in, unsigned long long in_len) {
   unsigned int index, begin, length;
-  unsigned long piece_length;
+  unsigned long long piece_length;
 
   if (in_len != 13) {
     dlog(config, LOG_LEVEL_WARN, "Message too small or too big for message request");
@@ -68,10 +68,10 @@ static int handle_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
 }
 
 static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-  char* in, unsigned long in_len) {
+  char* in, unsigned long long in_len) {
 
-  unsigned long i, j;
-  unsigned long bitfield_exp_length = (torrent->piece_count / 8) + (torrent->piece_count % 8 != 0);
+  unsigned long long i, j;
+  unsigned long long bitfield_exp_length = (torrent->piece_count / 8) + (torrent->piece_count % 8 != 0);
   if ((in_len - 1) < bitfield_exp_length) {
     dlog(config, LOG_LEVEL_WARN, "Bad bitfield length");
     return 1;
@@ -85,8 +85,8 @@ static int handle_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
   return 0;
 }
 
-static int handle_have(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long in_len) {
-  unsigned long index;
+static int handle_have(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long long in_len) {
+  unsigned long long index;
   
   if (in_len < 5) {
     dlog(config, LOG_LEVEL_WARN, "Bad have length");
@@ -107,7 +107,7 @@ static int handle_have(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer*
 
 static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char choked) {
   dtorr_listnode *it, *next;
-  unsigned long index;
+  unsigned long long index;
   dlog(config, LOG_LEVEL_DEBUG, "Peer choke status changed: %d", choked);
   peer->they_choked = choked;
   if (choked == 0) {
@@ -127,7 +127,7 @@ static void handle_choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_pee
   peer->total_out_request_count = peer->sent_request_count = 0;
 }
 
-int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long in_len) {
+int process_msg(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char* in, unsigned long long in_len) {
   
   if (in_len == 0) {
     /* set keep alive time */

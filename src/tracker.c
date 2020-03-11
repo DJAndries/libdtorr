@@ -5,6 +5,7 @@
 #include "dtorr/bencoding_decode.h"
 #include "hashmap.h"
 #include "peer.h"
+#include "util.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,7 +13,7 @@
 #define SEND_BUFF_SIZE 4096
 
 static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri, dtorr_node* peer_str) {
-  unsigned long i;
+  unsigned long long i;
   char ip[128];
   unsigned short port;
 
@@ -40,7 +41,7 @@ static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri
 
 static int process_dict(dtorr_config* config, dtorr_torrent* torrent, char* uri, dtorr_node* response_dict) {
   dtorr_node* node;
-  long* interval;
+  long long* interval;
 
   if (response_dict->type != DTORR_DICT) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce: response is not dict");
@@ -55,17 +56,17 @@ static int process_dict(dtorr_config* config, dtorr_torrent* torrent, char* uri,
     return 2;
   }
 
-  interval = (long*)malloc(sizeof(long));
+  interval = (long long*)malloc(sizeof(long long));
   node = hashmap_get(response_dict->value, "interval");
-  if (node != 0 && node->type == DTORR_NUM && *((long*)node->value) > 0) {
-    *interval = *((long*)node->value);
+  if (node != 0 && node->type == DTORR_NUM && *((long long*)node->value) > 0) {
+    *interval = *((long long*)node->value);
   } else {
     *interval = 1800;
   }
 
   node = hashmap_get(torrent->tracker_interval_map, uri);
   if (node != 0) {
-    *((long*)node->value) = *interval;
+    *((long long*)node->value) = *interval;
     /* no longer need this, since one exists in the map */
     free(interval);
   } else {
@@ -84,7 +85,7 @@ static int process_dict(dtorr_config* config, dtorr_torrent* torrent, char* uri,
   return 0;
 }
 
-static int process_response(dtorr_config* config, dtorr_torrent* torrent, char* uri, char* recvbuf, unsigned long recvlen) {
+static int process_response(dtorr_config* config, dtorr_torrent* torrent, char* uri, char* recvbuf, unsigned long long recvlen) {
   dtorr_node* response_dict;
   char* response_dict_txt;
 
@@ -122,7 +123,7 @@ static int process_response(dtorr_config* config, dtorr_torrent* torrent, char* 
 }
 
 static void generate_get_keys(dtorr_config* config, dtorr_torrent* torrent, char* result) {
-  unsigned long i;
+  unsigned long long i;
   char tmp[16];
   char info_hash[256] = "";
   char peer_id[256] = "";
@@ -134,14 +135,14 @@ static void generate_get_keys(dtorr_config* config, dtorr_torrent* torrent, char
     strcat(peer_id, tmp);
   }
 
-  sprintf(result, "?info_hash=%s&peer_id=%s&ip=%s&port=%u&uploaded=%lu&downloaded=%lu&left=%lu&compact=1",
+  sprintf(result, "?info_hash=%s&peer_id=%s&ip=%s&port=%u&uploaded=" SPEC_LLU "&downloaded=" SPEC_LLU "&left=" SPEC_LLU "&compact=1",
     info_hash, peer_id, torrent->me.ip, torrent->me.port, torrent->uploaded, torrent->downloaded, torrent->length - torrent->downloaded);
 }
 
-static int send_and_receive(dtorr_config* config, parsed_uri* parsed, dtorr_torrent* torrent, char* recvbuf, unsigned long* recvlen) {
+static int send_and_receive(dtorr_config* config, parsed_uri* parsed, dtorr_torrent* torrent, char* recvbuf, unsigned long long* recvlen) {
   SOCKET s;
   char sendbuf[SEND_BUFF_SIZE];
-  unsigned long sendlen;
+  unsigned long long sendlen;
   char get_keys[1024];
 
   if ((s = dsock_connect_uri(parsed)) == INVALID_SOCKET) {
@@ -178,7 +179,7 @@ static int send_and_receive(dtorr_config* config, parsed_uri* parsed, dtorr_torr
 int tracker_announce(dtorr_config* config, char* uri, dtorr_torrent* torrent) {
   parsed_uri* parsed = parse_uri(uri);
   char recvbuf[RECV_BUFF_SIZE];
-  unsigned long recvlen;
+  unsigned long long recvlen;
 
   if (parsed == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce failed to parse uri: %s", uri);

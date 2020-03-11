@@ -1,7 +1,7 @@
 #include "stack.h"
 #include <stdlib.h>
 
-stack* stack_init(unsigned long size) {
+stack* stack_init(unsigned long long size) {
   stack* result = (stack*)malloc(sizeof(stack));
   result->elements = (dtorr_node**)malloc(sizeof(dtorr_node*));
   result->size = size;

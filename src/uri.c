@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-unsigned long parse_schema(parsed_uri* result, char* uri, unsigned long len) {
-  unsigned long schema_end_i;
+unsigned long long parse_schema(parsed_uri* result, char* uri, unsigned long long len) {
+  unsigned long long schema_end_i;
   char* found_char = strchr(uri, ':');
 
   if (found_char == 0 || (schema_end_i = (found_char - uri)) > 20) {
@@ -23,8 +23,8 @@ unsigned long parse_schema(parsed_uri* result, char* uri, unsigned long len) {
   return schema_end_i;
 }
 
-unsigned long parse_hostname(parsed_uri* result, char* uri, unsigned long schema_end_i, unsigned long len) {
-  unsigned long part_len, hostname_end_i;
+unsigned long long parse_hostname(parsed_uri* result, char* uri, unsigned long long schema_end_i, unsigned long long len) {
+  unsigned long long part_len, hostname_end_i;
   char* found_char = strchr(uri + schema_end_i + 4, '/');
   if (found_char == 0) {
     found_char = uri + len;
@@ -44,7 +44,7 @@ unsigned long parse_hostname(parsed_uri* result, char* uri, unsigned long schema
 int parse_port(parsed_uri* result) {
   char* port_buf;
   char* found_char = strrchr(result->hostname, ':');
-  unsigned long buf_len, port_begin_i;
+  unsigned long long buf_len, port_begin_i;
 
   if (found_char != 0 && *(found_char + 1) != 0) {
     port_begin_i = found_char - result->hostname + 1;
@@ -76,7 +76,7 @@ int parse_port(parsed_uri* result) {
 
 int parse_rest(parsed_uri* result, char* rest_start) {
   char use_default = 0;
-  unsigned long len = strlen(rest_start);
+  unsigned long long len = strlen(rest_start);
 
   if (len < 2) {
     len = 1;
@@ -99,8 +99,8 @@ int parse_rest(parsed_uri* result, char* rest_start) {
 
 parsed_uri* parse_uri(char* uri) {
   parsed_uri* result;
-  unsigned long schema_end_i, hostname_end_i;
-  unsigned long len = strlen(uri);
+  unsigned long long schema_end_i, hostname_end_i;
+  unsigned long long len = strlen(uri);
 
   result = (parsed_uri*)malloc(sizeof(parsed_uri));
   memset(result, 0, sizeof(parsed_uri));

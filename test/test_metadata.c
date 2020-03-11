@@ -2,23 +2,24 @@
 #include <stdlib.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
+#include "util.h"
 
 #define TORRENT_COUNT 2
 
 void print_files(dtorr_torrent* torrent) {
-  unsigned long i;
+  unsigned long long i;
   dtorr_file* file;
   for (i = 0; i < torrent->file_count; i++) {
     file = torrent->files[i];
-    printf("File: %s Length: %lu\n", file->cat_path, file->length);
+    printf("File: %s Length: " SPEC_LLU "\n", file->cat_path, file->length);
   }
 }
 
 int test_torrent(unsigned int torrent_index) {
   dtorr_config* config = (dtorr_config*)malloc(sizeof(dtorr_config));
   dtorr_torrent* torrent;
-  long size;
-  unsigned long i;
+  long long size;
+  unsigned long long i;
   char filename[256];
   sprintf(filename, "test/torrents/%u.torrent", torrent_index);
   FILE* fp = fopen(filename, "rb");
@@ -42,7 +43,7 @@ int test_torrent(unsigned int torrent_index) {
   config->log_level = 1;
   config->log_handler = 0;
 
-  torrent = load_torrent_metadata(config, contents, (unsigned long)size);
+  torrent = load_torrent_metadata(config, contents, (unsigned long long)size);
   if (torrent == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 2;
@@ -50,10 +51,10 @@ int test_torrent(unsigned int torrent_index) {
 
   printf("Torrent name: %s\n", torrent->name);
   printf("Announce URL: %s\n", torrent->announce);
-  printf("Length: %lu\n", torrent->length);
-  printf("Piece length: %lu\n", torrent->piece_length);
-  printf("Piece count: %lu\n", torrent->piece_count);
-  printf("File count: %lu\n", torrent->file_count);
+  printf("Length: " SPEC_LLU "\n", torrent->length);
+  printf("Piece length: " SPEC_LLU "\n", torrent->piece_length);
+  printf("Piece count: " SPEC_LLU "\n", torrent->piece_count);
+  printf("File count: " SPEC_LLU "\n", torrent->file_count);
   if (torrent->files != 0) {
     printf("Has files!\n");
     print_files(torrent);

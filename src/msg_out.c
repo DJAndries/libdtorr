@@ -7,8 +7,8 @@
 #include <string.h>
 
 int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer) {
-  unsigned long i;
-  unsigned long compact_len = (torrent->piece_count / 8) + (torrent->piece_count % 8 != 0);
+  unsigned long long i;
+  unsigned long long compact_len = (torrent->piece_count / 8) + (torrent->piece_count % 8 != 0);
   char* buf = (char*)malloc(sizeof(char) * compact_len + 1);
 
   if (buf == 0) {
@@ -50,7 +50,7 @@ int send_choked_status(dtorr_config* config, dtorr_peer* peer, char choked) {
   return 0;
 }
 
-int send_have(dtorr_config* config, dtorr_torrent* torrent, unsigned long index) {
+int send_have(dtorr_config* config, dtorr_torrent* torrent, unsigned long long index) {
   char buf[5];
   dtorr_listnode *it, *next;
   dtorr_peer* peer;
@@ -87,7 +87,7 @@ int send_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
 }
 
 int send_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,dtorr_piece_request* req, char* data) {
-  unsigned long msg_len = sizeof(char) * req->length + 9;
+  unsigned long long msg_len = sizeof(char) * req->length + 9;
   char* buf = (char*)malloc(msg_len);
 
   if (buf == 0) {

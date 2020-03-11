@@ -4,10 +4,11 @@
 #include "tracker.h"
 #include "dsock.h"
 #include "hashmap.h"
+#include "util.h"
 
 dtorr_torrent* load_torrent(dtorr_config* config) {
   dtorr_torrent* torrent;
-  long size;
+  long long size;
   FILE* fp = fopen("test/torrents/1.torrent", "rb");
   char* contents;
 
@@ -26,7 +27,7 @@ dtorr_torrent* load_torrent(dtorr_config* config) {
 
   contents[size] = 0;
 
-  torrent = load_torrent_metadata(config, contents, (unsigned long)size);
+  torrent = load_torrent_metadata(config, contents, (unsigned long long)size);
   if (torrent == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 0;
@@ -42,7 +43,7 @@ int main(int argc, char** argv) {
   dtorr_torrent* torrent;
   dtorr_hashnode** peers;
   dtorr_hashnode** intervals;
-  unsigned long i;
+  unsigned long long i;
 
   if (argc < 2) {
     printf("Must specify tracker URL\n");
@@ -81,7 +82,7 @@ int main(int argc, char** argv) {
   printf("\nIntervals:\n");
   intervals = hashmap_entries(torrent->tracker_interval_map, 0);
   for (i = 0; i < torrent->tracker_interval_map->entry_count; i++) {
-    printf("%s: %lu seconds\n", intervals[i]->key, *((long*)intervals[i]->value));
+    printf("%s: " SPEC_LLD " seconds\n", intervals[i]->key, *((long long*)intervals[i]->value));
   }
 
   printf("Done!\n");

@@ -26,7 +26,7 @@ SOCKET dsock_start_server(unsigned short port);
 
 int dsock_set_sock_nonblocking(SOCKET s);
 
-int dsock_recv_timeout(SOCKET s, char* buf, unsigned long buf_size, unsigned int ms_wait);
+int dsock_recv_timeout(SOCKET s, char* buf, unsigned long long buf_size, unsigned int ms_wait);
 
 SOCKET dsock_close(SOCKET s);
 

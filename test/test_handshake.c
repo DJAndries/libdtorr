@@ -7,7 +7,7 @@
 
 dtorr_torrent* load_torrent(dtorr_config* config) {
   dtorr_torrent* torrent;
-  long size;
+  long long size;
   FILE* fp = fopen("test/torrents/1.torrent", "rb");
   char* contents;
 
@@ -26,7 +26,7 @@ dtorr_torrent* load_torrent(dtorr_config* config) {
 
   contents[size] = 0;
 
-  torrent = load_torrent_metadata(config, contents, (unsigned long)size);
+  torrent = load_torrent_metadata(config, contents, (unsigned long long)size);
   if (torrent == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 0;
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   dtorr_config config;
   dtorr_torrent* torrent;
   dtorr_peer* target;
-  unsigned long i;
+  unsigned long long i;
 
   if (argc < 3) {
     printf("Must specify target ip and port\n");

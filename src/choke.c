@@ -36,8 +36,8 @@ static int choke(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer)
 void choke_update(dtorr_config* config, dtorr_torrent* torrent) {
   dtorr_listnode *it, *next;
   dtorr_peer* peer;
-  unsigned long interested_count = 0;
-  unsigned long unchoked_count = 0;
+  unsigned long long interested_count = 0;
+  unsigned long long unchoked_count = 0;
   long unchoke_threshold;
   char should_choke;
 

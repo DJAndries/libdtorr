@@ -5,10 +5,11 @@
 #include "dtorr/state_persist.h"
 #include "dsock.h"
 #include "tracker.h"
+#include "util.h"
 
 dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
   dtorr_torrent* torrent;
-  long size;
+  long long size;
   FILE* fp = fopen(filename, "rb");
   char* contents;
 
@@ -27,7 +28,7 @@ dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
 
   contents[size] = 0;
 
-  torrent = load_torrent_metadata(config, contents, (unsigned long)size);
+  torrent = load_torrent_metadata(config, contents, (unsigned long long)size);
   if (torrent == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 0;
@@ -40,7 +41,7 @@ dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
 
 int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) {
   FILE* fp;
-  unsigned long state_len;
+  unsigned long long state_len;
   char* saved_state = save_state(config, torrent, &state_len);
   if (saved_state == 0) {
     return 1;
@@ -54,7 +55,7 @@ int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) 
 int main(int argc, char** argv) {
   dtorr_config config;
   dtorr_torrent *torrent, *torrent_with_state;
-  unsigned long i;
+  unsigned long long i;
 
   if (argc < 2) {
     printf("Must specify download dir\n");
@@ -92,8 +93,8 @@ int main(int argc, char** argv) {
   for (i = 0; i < torrent_with_state->piece_count; i++) {
     printf("%d", torrent_with_state->bitfield[i]);
   }
-  printf("\nDownloaded: %lu\n", torrent_with_state->downloaded);
-  printf("Uploaded: %lu\n", torrent_with_state->uploaded);
+  printf("\nDownloaded: " SPEC_LLU "\n", torrent_with_state->downloaded);
+  printf("Uploaded: " SPEC_LLU "\n", torrent_with_state->uploaded);
   printf("\n");
 
   dsock_clean();

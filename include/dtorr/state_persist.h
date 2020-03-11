@@ -3,7 +3,7 @@
 
 #include "dtorr/structs.h"
 
-char* save_state(dtorr_config* config, dtorr_torrent* torrent, unsigned long* result_len);
+char* save_state(dtorr_config* config, dtorr_torrent* torrent, unsigned long long* result_len);
 int parse_state(dtorr_config* config, dtorr_torrent* torrent);
 
 #endif

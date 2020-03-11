@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static unsigned long hash(unsigned char *str) { /* djb2 */
-  unsigned long hash = 5381;
+static unsigned long long hash(unsigned char *str) { /* djb2 */
+  unsigned long long hash = 5381;
   int c;
 
   while ((c = *str++)) {
@@ -13,7 +13,7 @@ static unsigned long hash(unsigned char *str) { /* djb2 */
   return hash;
 }
 
-dtorr_hashmap* hashmap_init(unsigned long size) {
+dtorr_hashmap* hashmap_init(unsigned long long size) {
   dtorr_hashmap* result = (dtorr_hashmap*)malloc(sizeof(dtorr_hashmap));
 
   if (result == 0) {
@@ -33,7 +33,7 @@ dtorr_hashmap* hashmap_init(unsigned long size) {
 }
 
 int hashmap_insert(dtorr_hashmap* map, char* key, void* value) {
-  unsigned long index, i;
+  unsigned long long index, i;
   dtorr_hashnode* hashnode;
   char* key_copy;
 
@@ -69,7 +69,7 @@ int hashmap_insert(dtorr_hashmap* map, char* key, void* value) {
 }
 
 void* hashmap_get(dtorr_hashmap* map, char* key) {
-  unsigned long index, i;
+  unsigned long long index, i;
   dtorr_hashnode* element;
   index = hash((unsigned char*)key) % map->map_size;
 
@@ -95,8 +95,8 @@ static int key_sort(const void* a, const void* b) {
 }
 
 dtorr_hashnode** hashmap_entries(dtorr_hashmap* map, char sort_by_key) {
-  unsigned long i;
-  unsigned long result_index = 0;
+  unsigned long long i;
+  unsigned long long result_index = 0;
   dtorr_hashnode* element;
   dtorr_hashnode** result = (dtorr_hashnode**)malloc(sizeof(dtorr_hashnode*) * map->entry_count);
   

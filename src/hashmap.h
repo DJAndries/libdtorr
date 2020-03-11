@@ -6,7 +6,7 @@
 
 #define DEFAULT_HASHMAP_SIZE 512
 
-dtorr_hashmap* hashmap_init(unsigned long size);
+dtorr_hashmap* hashmap_init(unsigned long long size);
 
 int hashmap_insert(dtorr_hashmap* map, char* key, void* value);
 

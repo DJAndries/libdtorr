@@ -1,6 +1,7 @@
 #include "dtorr/bencoding_encode.h"
 #include "log.h"
 #include "hashmap.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,9 +9,9 @@
 #define MAX_RECURSION 16
 #define BUFFER_UNIT 128
 
-static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size);
+static int encode_helper(dtorr_config* config, unsigned long long level, dtorr_node* node, char** result, unsigned long long* result_len, unsigned long long* result_size);
 
-static int resize_result(dtorr_config* config, char** result, unsigned long* result_size, unsigned long increase) {
+static int resize_result(dtorr_config* config, char** result, unsigned long long* result_size, unsigned long long increase) {
   if (increase == 0) {
     increase = BUFFER_UNIT;
   }
@@ -26,9 +27,9 @@ static int resize_result(dtorr_config* config, char** result, unsigned long* res
   return 0;
 }
 
-static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** result, unsigned long* result_len, unsigned long* result_size) {
-  unsigned long char_write;
-  unsigned long len;
+static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** result, unsigned long long* result_len, unsigned long long* result_size) {
+  unsigned long long char_write;
+  unsigned long long len;
   if (node != 0) {
     str = (char*)node->value;
     len = node->len;
@@ -41,7 +42,7 @@ static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** 
       return 1;
     }
   }
-  char_write = sprintf(*result + *result_len, "%lu:", len);
+  char_write = sprintf(*result + *result_len, SPEC_LLU ":", len);
   if (char_write == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to encode string");
     return 2;
@@ -53,16 +54,16 @@ static int handle_str(dtorr_config* config, dtorr_node* node, char* str, char** 
   return 0;
 }
 
-static int handle_num(dtorr_config* config, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
-  long* num = (long*)node->value;
-  unsigned long char_write;
+static int handle_num(dtorr_config* config, dtorr_node* node, char** result, unsigned long long* result_len, unsigned long long* result_size) {
+  long long* num = (long long*)node->value;
+  unsigned long long char_write;
   if (*result_len + 64 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: num needs buffer resize");
     if (resize_result(config, result, result_size, (*result_len + 64) - *result_size + 1) != 0) {
       return 1;
     }
   }
-  char_write = sprintf(*result + *result_len, "i%lde", *num);
+  char_write = sprintf(*result + *result_len, "i" SPEC_LLD "e", *num);
   if (char_write == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: failed to encode string");
     return 2;
@@ -71,10 +72,10 @@ static int handle_num(dtorr_config* config, dtorr_node* node, char** result, uns
   return 0;
 }
 
-static int handle_list(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+static int handle_list(dtorr_config* config, unsigned long long level, dtorr_node* node, char** result, unsigned long long* result_len, unsigned long long* result_size) {
   dtorr_node** list = (dtorr_node**)node->value;
   dtorr_node* element;
-  unsigned long i;
+  unsigned long long i;
 
   if (*result_len + 8 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: list needs buffer resize");
@@ -97,11 +98,11 @@ static int handle_list(dtorr_config* config, unsigned long level, dtorr_node* no
   return 0;
 }
 
-static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+static int handle_dict(dtorr_config* config, unsigned long long level, dtorr_node* node, char** result, unsigned long long* result_len, unsigned long long* result_size) {
   dtorr_hashmap* map = (dtorr_hashmap*)node->value;
   dtorr_hashnode** entries;
   dtorr_hashnode* entry;
-  unsigned long i;
+  unsigned long long i;
 
   if (*result_len + 8 >= *result_size) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: dict needs buffer resize");
@@ -140,7 +141,7 @@ static int handle_dict(dtorr_config* config, unsigned long level, dtorr_node* no
   return 0;
 }
 
-static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* node, char** result, unsigned long* result_len, unsigned long* result_size) {
+static int encode_helper(dtorr_config* config, unsigned long long level, dtorr_node* node, char** result, unsigned long long* result_len, unsigned long long* result_size) {
   int ret = 0;
   if (level > MAX_RECURSION) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding encode: max recursion reached");
@@ -166,8 +167,8 @@ static int encode_helper(dtorr_config* config, unsigned long level, dtorr_node* 
   return ret;
 }
 
-char* bencoding_encode(dtorr_config* config, dtorr_node* node, unsigned long* result_len) {
-  unsigned long result_size = BUFFER_UNIT;
+char* bencoding_encode(dtorr_config* config, dtorr_node* node, unsigned long long* result_len) {
+  unsigned long long result_size = BUFFER_UNIT;
   char* result = (char*)malloc(sizeof(char) * result_size);
   memset(result, 0, result_size);
 

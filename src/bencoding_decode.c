@@ -2,19 +2,20 @@
 #include "dtorr/structs.h"
 #include "hashmap.h"
 #include "log.h"
+#include "util.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define MAX_RECURSION 16
 
-static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end);
+static char* decode_helper(dtorr_config* config, unsigned long long level, dtorr_node* curr_node, char* value, char* value_end);
 
 static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value, char* value_end, char** extracted_str) {
-  unsigned long str_length;
+  unsigned long long str_length;
   char* str_value;
 
-  if (sscanf(value, "%lu:", &str_length) == 0) {
+  if (sscanf(value, SPEC_LLU ":", &str_length) == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: unable to parse str length");
     return 0;
   }
@@ -57,7 +58,7 @@ static char* handle_str(dtorr_config* config, dtorr_node* curr_node, char* value
   return value;
 }
 
-static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
+static char* handle_dict(dtorr_config* config, unsigned long long level, dtorr_node* curr_node, char* value, char* value_end) {
   char* key = 0;
   dtorr_node* node = 0;
   dtorr_hashmap* map = hashmap_init(256);
@@ -114,8 +115,8 @@ static char* handle_dict(dtorr_config* config, unsigned long level, dtorr_node* 
   return value + 1;
 }
 
-static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
-  unsigned long size = 256;
+static char* handle_list(dtorr_config* config, unsigned long long level, dtorr_node* curr_node, char* value, char* value_end) {
+  unsigned long long size = 256;
   dtorr_node** list = (dtorr_node**)malloc(sizeof(dtorr_node*) * size);
   dtorr_node* element;
   
@@ -166,14 +167,14 @@ static char* handle_list(dtorr_config* config, unsigned long level, dtorr_node* 
 }
 
 static char* handle_num(dtorr_config* config, dtorr_node* curr_node, char* value) {
-  long* num = (long*)malloc(sizeof(long));
+  long long* num = (long long*)malloc(sizeof(long long));
 
   if (num == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: unable to allocate num");
     return 0;
   }
 
-  if (sscanf(value, "%lde", num) == 0) {
+  if (sscanf(value, SPEC_LLD "e", num) == 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: unable to parse num");
     free(num);
     return 0;
@@ -196,7 +197,7 @@ static char* handle_num(dtorr_config* config, dtorr_node* curr_node, char* value
   return value;
 }
 
-static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node* curr_node, char* value, char* value_end) {
+static char* decode_helper(dtorr_config* config, unsigned long long level, dtorr_node* curr_node, char* value, char* value_end) {
   if (level > MAX_RECURSION) {
     dlog(config, LOG_LEVEL_DEBUG, "Bencoding decode: max recursion reached");
     return 0;
@@ -217,7 +218,7 @@ static char* decode_helper(dtorr_config* config, unsigned long level, dtorr_node
   return value;
 }
 
-dtorr_node* bencoding_decode(dtorr_config* config, char* value, unsigned long value_len) {
+dtorr_node* bencoding_decode(dtorr_config* config, char* value, unsigned long long value_len) {
   char* value_end = value + value_len;
   dtorr_node* result = (dtorr_node*)malloc(sizeof(dtorr_node));
 

@@ -10,7 +10,7 @@
 
 #define MAX_IN_REQS 1024
 
-static int verify_hash(dtorr_config* config, dtorr_torrent* torrent, char* buf, unsigned long index, unsigned long len) {
+static int verify_hash(dtorr_config* config, dtorr_torrent* torrent, char* buf, unsigned long long index, unsigned long long len) {
   unsigned char* hash;
   if ((hash = SHA1((unsigned char*)buf, len, 0)) == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Unable to hash/verify piece");
@@ -24,8 +24,8 @@ static int verify_hash(dtorr_config* config, dtorr_torrent* torrent, char* buf, 
   return 0;
 }
 
-static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, unsigned long index) {
-  unsigned long piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
+static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, unsigned long long index) {
+  unsigned long long piece_length = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
 
   if (verify_hash(config, torrent, torrent->in_piece_buf_map[index], index, piece_length) != 0) {
     return 1;
@@ -48,7 +48,7 @@ static int piece_completed(dtorr_config* config, dtorr_torrent* torrent, dtorr_p
 }
 
 int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
-  unsigned long index, unsigned long begin, char* piece, unsigned long piece_len) {
+  unsigned long long index, unsigned long long begin, char* piece, unsigned long long piece_len) {
   dtorr_listnode *it, *next;
   dtorr_piece_request *it_req;
   char is_request_left = 0;
@@ -85,8 +85,8 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
 }
 
 static int load_piece_data(dtorr_config* config, dtorr_torrent* torrent,
-                                     dtorr_peer* peer, unsigned long index) {
-  unsigned long len = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
+                                     dtorr_peer* peer, unsigned long long index) {
+  unsigned long long len = calc_piece_length(torrent->piece_count, torrent->piece_length, torrent->length, index);
   peer->curr_in_piece = (char*)malloc(sizeof(char) * len);
   if (peer->curr_in_piece == 0) {
     return 1;
@@ -101,8 +101,8 @@ static int load_piece_data(dtorr_config* config, dtorr_torrent* torrent,
   return 0;
 }
 
-int queue_request(dtorr_config* config, dtorr_peer* peer, unsigned long index,
-                  unsigned long begin, unsigned long length) {
+int queue_request(dtorr_config* config, dtorr_peer* peer, unsigned long long index,
+                  unsigned long long begin, unsigned long long length) {
   dtorr_piece_request* req;
 
   req = (dtorr_piece_request*)malloc(sizeof(dtorr_piece_request));

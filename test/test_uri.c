@@ -34,7 +34,7 @@ int test_uri(char* uri) {
 }
 
 int main() {
-  unsigned long i;
+  unsigned long long i;
 
   for (i = 0; i < URI_COUNT; i++) {
     if (test_uri(uris[i]) != 0) {

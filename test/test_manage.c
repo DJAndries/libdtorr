@@ -19,7 +19,7 @@ void intr_func(int sig) {
 
 dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
   dtorr_torrent* result;
-  long size;
+  long long size;
   FILE* fp = fopen(filename, "rb");
   char* contents;
 
@@ -38,7 +38,7 @@ dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
 
   contents[size] = 0;
 
-  result = load_torrent_metadata(config, contents, (unsigned long)size);
+  result = load_torrent_metadata(config, contents, (unsigned long long)size);
   if (result == 0) {
     fprintf(stderr, "Failed to load torrent!\n");
     return 0;
@@ -51,7 +51,7 @@ dtorr_torrent* load_torrent(dtorr_config* config, char* filename) {
 
 int persist_state(dtorr_config* config, dtorr_torrent* torrent, char* filename) {
   FILE* fp;
-  unsigned long state_len;
+  unsigned long long state_len;
   char* saved_state = save_state(config, torrent, &state_len);
   if (saved_state == 0) {
     return 1;
@@ -71,7 +71,7 @@ dtorr_torrent* torrent_lookup(char* infohash) {
 
 int main(int argc, char** argv) {
   dtorr_config config;
-  unsigned long i;
+  unsigned long long i;
   char* bitfield;
 
   if (argc < 5) {

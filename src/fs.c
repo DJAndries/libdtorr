@@ -10,8 +10,8 @@
 #define ALLOC_BUF_SIZE 64 * 1024
 
 static char* join_path(char* a, char* b) {
-  unsigned long alen = strlen(a);
-  unsigned long blen = strlen(b);
+  unsigned long long alen = strlen(a);
+  unsigned long long blen = strlen(b);
   char* result = (char*)malloc(sizeof(char) * (alen + blen + 2));
   if (result == 0) {
     return 0;
@@ -67,7 +67,7 @@ static char* extract_dir(char* path) {
 
 static short unsigned int* create_wide_path(char* path) {
   short unsigned int* wide_path;
-  unsigned long wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, 0, 0);
+  unsigned long long wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, 0, 0);
   if (wlen == 0) {
     return 0;
   }
@@ -133,9 +133,9 @@ static char* file_full_path(char* download_dir, dtorr_file* meta_file) {
   return joined_path;
 }
 
-static int allocate_file(char* path, unsigned long length) {
+static int allocate_file(char* path, unsigned long long length) {
   char zerobuf[ALLOC_BUF_SIZE];
-  unsigned long count;
+  unsigned long long count;
   FILE* f = open_file(path, "wb");
   if (f == 0) {
     return 1;
@@ -183,7 +183,7 @@ static int init_file(char* download_dir, dtorr_file* meta_file) {
 }
 
 int init_torrent_files(dtorr_config* config, dtorr_torrent* torrent) {
-  unsigned long i;
+  unsigned long long i;
   for (i = 0; i < torrent->file_count; i++) {
     if (init_file(torrent->download_dir, torrent->files[i]) != 0) {
       dlog(config, LOG_LEVEL_ERROR, "File init: Failed to allocate %s", torrent->files[i]->cat_path);
@@ -193,11 +193,11 @@ int init_torrent_files(dtorr_config* config, dtorr_torrent* torrent) {
   return 0;
 }
 
-static long rw_for_file(dtorr_config* config, char* download_dir, dtorr_file* meta_file, unsigned long file_offset, char* buf, unsigned long buf_size, char is_write) {
+static long long rw_for_file(dtorr_config* config, char* download_dir, dtorr_file* meta_file, unsigned long long file_offset, char* buf, unsigned long long buf_size, char is_write) {
   char* full_path;
   FILE* f;
-  long result;
-  long len;
+  long long result;
+  long long len;
   if ((full_path = file_full_path(download_dir, meta_file)) == 0) {
     return -1;
   }
@@ -230,12 +230,12 @@ static long rw_for_file(dtorr_config* config, char* download_dir, dtorr_file* me
   return result;
 }
 
-int rw_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long index, char* buf, unsigned long buf_size, char is_write) {
-  unsigned long piece_global_offset = torrent->piece_length * index;
-  unsigned long i;
-  unsigned long file_global_offset = 0;
-  unsigned long file_offset;
-  long io_result;
+int rw_piece(dtorr_config* config, dtorr_torrent* torrent, unsigned long long index, char* buf, unsigned long long buf_size, char is_write) {
+  unsigned long long piece_global_offset = torrent->piece_length * index;
+  unsigned long long i;
+  unsigned long long file_global_offset = 0;
+  unsigned long long file_offset;
+  long long io_result;
   dtorr_file* meta_file;
   for (i = 0; i < torrent->file_count && buf_size != 0; i++) {
 

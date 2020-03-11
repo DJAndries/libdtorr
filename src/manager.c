@@ -21,7 +21,7 @@
 #define MSG_BUF_SIZE 32 * 1024
 
 static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
-  unsigned long i;
+  unsigned long long i;
   dtorr_hashnode** peer_entries;
   dtorr_peer* peer;
 
@@ -51,7 +51,7 @@ static int start_peers(dtorr_config* config, dtorr_torrent* torrent) {
   return 0;
 }
 
-static void calc_metrics(dtorr_config* config, dtorr_torrent* torrent, unsigned long interval_time) {
+static void calc_metrics(dtorr_config* config, dtorr_torrent* torrent, unsigned long long interval_time) {
   torrent->download_rate = torrent->downloaded_interval / (interval_time / 1000.0);
   torrent->upload_rate = torrent->uploaded_interval / (interval_time / 1000.0);
   dlog(config, LOG_LEVEL_DEBUG, "Download rate: %lu kbps Upload rate: %lu kbps",
@@ -61,8 +61,8 @@ static void calc_metrics(dtorr_config* config, dtorr_torrent* torrent, unsigned 
 }
 
 static int interval_tasks(dtorr_config* config, dtorr_torrent* torrent) {
-  unsigned long curr_time = get_time_ms();
-  unsigned long metrics_time;
+  unsigned long long curr_time = get_time_ms();
+  unsigned long long metrics_time;
 
   if ((curr_time - torrent->last_peerstart_time) >= START_PEERS_INTERVAL) {
     dlog(config, LOG_LEVEL_DEBUG, "Peerstarts at %lu ms", curr_time);
@@ -104,7 +104,7 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
   dtorr_listnode* next;
   dtorr_peer* peer;
   char buf[MSG_BUF_SIZE];
-  unsigned long msg_len;
+  unsigned long long msg_len;
   int read_result;
 
   if (interval_tasks(config, torrent) != 0) {

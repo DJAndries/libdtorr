@@ -10,9 +10,9 @@
 #define MAX_SENT_REQUESTS 128
 #define REQUEST_SIZE 16 * 1024
 
-long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char random) {
-  long index = 0;
-  long i;
+long long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char random) {
+  long long index = 0;
+  long long i;
 
   if (random == 1) {
     srand((unsigned int)get_time_ms());
@@ -30,7 +30,7 @@ long bitfield_interest_index(dtorr_torrent* torrent, dtorr_peer* peer, char rand
 }
 
 void interest_update(dtorr_config* config, dtorr_torrent* torrent) {
-  long interest_index;
+  long long interest_index;
   dtorr_listnode *it, *next;
   dtorr_peer* peer;
   char interested;
@@ -60,8 +60,8 @@ void interest_update(dtorr_config* config, dtorr_torrent* torrent) {
 }
 
 static int queue_requests(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer) {
-  long request_index;
-  unsigned long piece_length, piece_length_i, begin;
+  long long request_index;
+  unsigned long long piece_length, piece_length_i, begin;
   dtorr_piece_request* req;
   if (peer->total_out_request_count >= MAX_SENT_REQUESTS * 2) {
     return 0;

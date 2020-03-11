@@ -6,12 +6,12 @@
 struct stack {
   dtorr_node** elements;
 
-  unsigned long next_index;
-  unsigned long size;
+  unsigned long long next_index;
+  unsigned long long size;
 };
 typedef struct stack stack;
 
-stack* stack_init(unsigned long size);
+stack* stack_init(unsigned long long size);
 
 int stack_push(stack* st, dtorr_node* node);
 

@@ -13,8 +13,8 @@ char *default_torrent_name = "torrent";
 
 static char* concat_path(dtorr_node* path) {
   char* result;
-  unsigned long i;
-  unsigned long cat_path_length = 0;
+  unsigned long long i;
+  unsigned long long cat_path_length = 0;
   for (i = 0; i < path->len; i++) {
     cat_path_length += ((dtorr_node**)path->value)[i]->len + 1;
   }
@@ -32,7 +32,7 @@ static char* concat_path(dtorr_node* path) {
   return result;
 }
 
-static dtorr_file* construct_file(dtorr_config* config, unsigned long length, dtorr_node* path) {
+static dtorr_file* construct_file(dtorr_config* config, unsigned long long length, dtorr_node* path) {
   dtorr_file* file;
   char* cat_path = concat_path(path);
   if (cat_path == 0) {
@@ -51,7 +51,7 @@ static dtorr_file* construct_file(dtorr_config* config, unsigned long length, dt
 }
 
 static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result, dtorr_node* files) {
-  unsigned long i, file_length;
+  unsigned long long i, file_length;
   dtorr_node* node;
   dtorr_node* inner_node;
 
@@ -75,11 +75,11 @@ static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result, 
     }
 
     inner_node = hashmap_get((dtorr_hashmap*)node->value, "length");
-    if (inner_node == 0 || inner_node->type != DTORR_NUM || *((long*)inner_node->value) <= 0) {
+    if (inner_node == 0 || inner_node->type != DTORR_NUM || *((long long*)inner_node->value) <= 0) {
       dlog(config, LOG_LEVEL_ERROR, "Invalid file length");
       return 3;
     }
-    file_length = *((long*)inner_node->value);
+    file_length = *((long long*)inner_node->value);
     result->length += file_length;
 
     inner_node = hashmap_get((dtorr_hashmap*)node->value, "path");
@@ -99,8 +99,8 @@ static int validate_and_calc_files(dtorr_config* config, dtorr_torrent* result, 
 }
 
 static int validate_pieces_and_length(dtorr_config* config, dtorr_torrent* result) {
-  unsigned long valid_min_length = result->piece_length * (result->piece_count - 1);
-  unsigned long valid_max_length = result->piece_length * result->piece_count;
+  unsigned long long valid_min_length = result->piece_length * (result->piece_count - 1);
+  unsigned long long valid_max_length = result->piece_length * result->piece_count;
 
   dlog(config, LOG_LEVEL_DEBUG, "Metaloading: check piece length");
   if (result->length < valid_min_length || result->length > valid_max_length) {
@@ -111,7 +111,7 @@ static int validate_pieces_and_length(dtorr_config* config, dtorr_torrent* resul
 }
 
 static int generate_infohash(dtorr_config* config, dtorr_torrent* result, dtorr_node* info) {
-  unsigned long encoded_len;
+  unsigned long long encoded_len;
   char* encoded_info;
 
   dlog(config, LOG_LEVEL_DEBUG, "Infohash generation");
@@ -184,19 +184,19 @@ static int process_info(dtorr_config* config, dtorr_torrent* result, dtorr_hashm
   result->piece_count = node->len / 20;
 
   node = hashmap_get(info, "piece length");
-  if (node == 0 || node->type != DTORR_NUM || *((long*)node->value) <= 0) {
+  if (node == 0 || node->type != DTORR_NUM || *((long long*)node->value) <= 0) {
     dlog(config, LOG_LEVEL_ERROR, "Invalid piece length");
     return 2;
   }
-  result->piece_length = *((long*)node->value);
+  result->piece_length = *((long long*)node->value);
 
   node = hashmap_get(info, "length");
   if (node != 0) {
-    if (node->type != DTORR_NUM || *((long*)node->value) <= 0) {
+    if (node->type != DTORR_NUM || *((long long*)node->value) <= 0) {
       dlog(config, LOG_LEVEL_ERROR, "Invalid length");
       return 3;
     }
-    result->length = *((long*)node->value);
+    result->length = *((long long*)node->value);
     result->file_count = 1;
   }
 
@@ -263,7 +263,7 @@ static int process_decoded(dtorr_config* config, dtorr_torrent* result, dtorr_no
   return 0;
 }
 
-dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned long data_len) {
+dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned long long data_len) {
   dtorr_torrent* result = (dtorr_torrent*)malloc(sizeof(dtorr_torrent));
   dtorr_node* decoded_data;
   if (result == 0) {
@@ -308,7 +308,7 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
 }
 
 void free_torrent(dtorr_torrent* torrent) {
-  unsigned long i;
+  unsigned long long i;
   /* free nodes for "decoded" (if exists), will clear the rest */
   if (torrent->infohash != 0) {
     free(torrent->infohash);

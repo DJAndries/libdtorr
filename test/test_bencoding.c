@@ -15,7 +15,7 @@ char *tests[] = {
   "d1:b5:h\x00\x00lo1:al1:a2:bbee"
 };
 
-unsigned long tests_len[] = {
+unsigned long long tests_len[] = {
   4,
   14,
   14,
@@ -24,8 +24,8 @@ unsigned long tests_len[] = {
   24
 };
 
-void print_encoded(char* content, unsigned long length) {
-  unsigned long i;
+void print_encoded(char* content, unsigned long long length) {
+  unsigned long long i;
   char c;
   for (i = 0; i < length; i++) {
     c = content[i];
@@ -40,12 +40,12 @@ void print_encoded(char* content, unsigned long length) {
 }
 
 int main() {
-  unsigned long i;
+  unsigned long long i;
   dtorr_config* config = (dtorr_config*)malloc(sizeof(dtorr_config));
   char* str;
   char* test;
   dtorr_node* node;
-  unsigned long encode_length;
+  unsigned long long encode_length;
 
   config->log_level = 4;
   config->log_handler = 0;

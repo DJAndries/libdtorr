@@ -7,7 +7,7 @@
 void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char bad) {
   dlog(config, LOG_LEVEL_INFO, "Closing peer %s:%u. Bad: %d", peer->ip, peer->port, bad);
   dtorr_listnode *it, *next;
-  unsigned long index;
+  unsigned long long index;
   if (peer->s != INVALID_SOCKET) {
     peer->s = dsock_close(peer->s);
   }

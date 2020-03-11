@@ -67,7 +67,7 @@ int save_download_dir(dtorr_config* config, dtorr_torrent* torrent, dtorr_hashma
   return 0;
 }
 
-int save_data_count(dtorr_config* config, dtorr_torrent* torrent, dtorr_hashmap* state, char* key, unsigned long value) {
+int save_data_count(dtorr_config* config, dtorr_torrent* torrent, dtorr_hashmap* state, char* key, unsigned long long value) {
   dtorr_hashmap* decoded = (dtorr_hashmap*)torrent->decoded->value;
   dtorr_node *node;
   node = (dtorr_node*)hashmap_get(decoded, key);
@@ -76,7 +76,7 @@ int save_data_count(dtorr_config* config, dtorr_torrent* torrent, dtorr_hashmap*
       return 2;
     }
     node->type = DTORR_NUM;
-    if ((node->value = malloc(sizeof(long))) == 0) {
+    if ((node->value = malloc(sizeof(long long))) == 0) {
       free(node);
       return 3;
     }
@@ -87,11 +87,11 @@ int save_data_count(dtorr_config* config, dtorr_torrent* torrent, dtorr_hashmap*
     }
   }
 
-    *((long*)node->value) = (long)value;
+    *((long long*)node->value) = (long long)value;
   return 0;
 }
 
-char* save_state(dtorr_config* config, dtorr_torrent* torrent, unsigned long* result_len) {
+char* save_state(dtorr_config* config, dtorr_torrent* torrent, unsigned long long* result_len) {
   dtorr_hashmap* decoded = (dtorr_hashmap*)torrent->decoded->value;
   dtorr_hashmap* state;
 
@@ -159,14 +159,14 @@ int parse_state(dtorr_config* config, dtorr_torrent* torrent) {
   if (downloaded_node == 0 || downloaded_node->type != DTORR_NUM || downloaded_node->value < 0) {
     dlog(config, LOG_LEVEL_DEBUG, "State parse: Ignoring downloaded count");
   } else {
-    torrent->downloaded = (unsigned long)*((long*)downloaded_node->value);
+    torrent->downloaded = (unsigned long long)*((long long*)downloaded_node->value);
   }
 
   uploaded_node = (dtorr_node*)hashmap_get(state, UPLOADED_KEY);
   if (uploaded_node == 0 || uploaded_node->type != DTORR_NUM || uploaded_node->value < 0) {
     dlog(config, LOG_LEVEL_DEBUG, "State parse: Ignoring uploaded count");
   } else {
-    torrent->uploaded = (unsigned long)*((long*)uploaded_node->value);
+    torrent->uploaded = (unsigned long long)*((long long*)uploaded_node->value);
   }
 
   if (torrent->download_dir != 0) {
