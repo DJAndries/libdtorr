@@ -53,7 +53,7 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   dtorr_piece_request *it_req;
   char is_request_left = 0;
 
-  dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: %lu begin: %lu", index, begin);
+  dlog(config, LOG_LEVEL_DEBUG, "Recv piece part index: " SPEC_LLU " begin: " SPEC_LLU, index, begin);
 
   if (torrent->in_piece_buf_map[index] == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Recv piece that was not requested");

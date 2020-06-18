@@ -1,13 +1,18 @@
 #include "dtorr/fs.h"
 #include "log.h"
+#include "util.h"
 #include <stdio.h>
 #include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
+#define lfseek _fseeki64
+#else
+#define _FILE_OFFSET_BITS 64
+#define lfseek fseeko
 #endif
 
-#define ALLOC_BUF_SIZE 64 * 1024
+#define ALLOC_BUF_SIZE 16 * 1024 * 1024
 
 static char* join_path(char* a, char* b) {
   unsigned long long alen = strlen(a);
@@ -44,27 +49,6 @@ static char* convert_os_dir(char* dir) {
   return result;
 }
 
-static char* extract_dir(char* path) {
-  #ifdef _WIN32
-    char sep = '\\';
-  #else
-    char sep = '/';
-  #endif
-  char* result = (char*)malloc(sizeof(char) * strlen(path) + 1);
-  char* found;
-  if (result == 0) {
-    return 0;
-  }
-  strcpy(result, path);
-  found = strrchr(result, sep);
-  if (found == 0) {
-    result[0] = 0;
-  } else {
-    *found = 0;
-  }
-  return result;
-}
-
 static short unsigned int* create_wide_path(char* path) {
   short unsigned int* wide_path;
   unsigned long long wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, 0, 0);
@@ -86,7 +70,7 @@ static short unsigned int* create_wide_path(char* path) {
 static int create_dir(char* path) {
   #ifdef _WIN32
     int result;
-    
+
     short unsigned int* wide_dir = create_wide_path(path);
     if (wide_dir == 0) {
       return 1;
@@ -134,45 +118,63 @@ static char* file_full_path(char* download_dir, dtorr_file* meta_file) {
 }
 
 static int allocate_file(char* path, unsigned long long length) {
-  char zerobuf[ALLOC_BUF_SIZE];
-  unsigned long long count;
-  FILE* f = open_file(path, "wb");
-  if (f == 0) {
+  char* zerobuf = (char*)malloc(sizeof(char) * ALLOC_BUF_SIZE);
+  FILE* f;
+  unsigned int count;
+
+  if (zerobuf == 0) {
     return 1;
   }
+
   memset(zerobuf, 0, ALLOC_BUF_SIZE);
-  if (setvbuf(f, 0, _IOFBF, ALLOC_BUF_SIZE) != 0) {
-    fclose(f);
-    return 2;
+
+  f = open_file(path, "wb");
+  if (f == 0) {
+    free(zerobuf);
+    return 1;
   }
+  setvbuf(f, 0,_IONBF, 0);
   while (length != 0) {
     count = ALLOC_BUF_SIZE > length ? length : ALLOC_BUF_SIZE;
     if (fwrite(zerobuf, sizeof(char), count, f) != count) {
       fclose(f);
+      free(zerobuf);
       return 3;
     }
     length -= count;
   }
+  free(zerobuf);
   fclose(f);
   return 0;
 }
 
 static int init_file(char* download_dir, dtorr_file* meta_file) {
-  char* extracted_dir;
   char* joined_path = file_full_path(download_dir, meta_file);
+  unsigned long long i;
+  char *dir = 0;
+  char *dir_part;
+
   if (joined_path == 0) {
     return 1;
   }
-  extracted_dir = extract_dir(joined_path);
-  if (extracted_dir == 0) {
-    return 3;
+
+  if (meta_file->path->type == DTORR_LIST) {
+    /* create nested dirs */
+    for (i = 0; i < meta_file->path->len - 1; i++) {
+      dir_part = ((dtorr_node**)meta_file->path->value)[i]->value;
+      dir = join_path(dir != 0 ? dir : download_dir, dir_part);
+
+      if (create_dir(dir) != 0) {
+        free(dir);
+        free(joined_path);
+        return 4;
+      }
+    }
   }
-  if (create_dir(extracted_dir) != 0) {
-    free(joined_path);
-    free(extracted_dir);
-    return 4;
+
+  if (dir != 0) {
+    free(dir);
   }
-  free(extracted_dir);
 
   if (allocate_file(joined_path, meta_file->length) != 0) {
     free(joined_path);
@@ -207,20 +209,20 @@ static long long rw_for_file(dtorr_config* config, char* download_dir, dtorr_fil
     return -2;
   }
   free(full_path);
-  if (fseek(f, file_offset, SEEK_SET) != 0) {
+  if (lfseek(f, file_offset, SEEK_SET) != 0) {
     dlog(config, LOG_LEVEL_DEBUG, "Failed to seek file");
     fclose(f);
     return -3;
   }
   len = (meta_file->length - file_offset) >= buf_size ? buf_size : (meta_file->length - file_offset);
   if (is_write == 1) {
-    dlog(config, LOG_LEVEL_DEBUG, "Writing %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
+    dlog(config, LOG_LEVEL_DEBUG, "Writing " SPEC_LLD " bytes at offset " SPEC_LLU " in file %s", len, file_offset, meta_file->cat_path);
     if ((result = fwrite(buf, sizeof(char), len, f)) != len) {
       fclose(f);
       return -4;
     }
   } else {
-    dlog(config, LOG_LEVEL_DEBUG, "Reading %lu bytes at offset %lu in file %s", len, file_offset, meta_file->cat_path);
+    dlog(config, LOG_LEVEL_DEBUG, "Reading " SPEC_LLD " bytes at offset " SPEC_LLU " in file %s", len, file_offset, meta_file->cat_path);
     if ((result = fread(buf, sizeof(char), len, f)) != len) {
       fclose(f);
       return -4;

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define RECV_BUFF_SIZE 64 * 1024
+#define RECV_BUFF_SIZE 256 * 1024
 #define SEND_BUFF_SIZE 4096
 
 static int process_peers(dtorr_config* config, dtorr_torrent* torrent, char* uri, dtorr_node* peer_str) {
@@ -153,17 +153,17 @@ static int send_and_receive(dtorr_config* config, parsed_uri* parsed, dtorr_torr
 
   generate_get_keys(config, torrent, get_keys);
 
-  sendlen = sprintf(sendbuf, "GET %s%s\r\nHost: %s\r\nUser-Agent: dtorr\r\n\r\n", parsed->rest, get_keys, parsed->hostname_with_port);
+  sendlen = sprintf(sendbuf, "GET %s%s HTTP/1.1\r\nHost: %s\r\nUser-Agent: dtorr/1.0\r\n\r\n", parsed->rest, get_keys, parsed->hostname_with_port);
   if (send(s, sendbuf, sendlen, 0) != sendlen) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce: failed to send");
     free_parsed_uri(parsed);
     dsock_close(s);
     return 3;
   }
-  
+
   free_parsed_uri(parsed);
 
-  *recvlen = dsock_recv_timeout(s, recvbuf, RECV_BUFF_SIZE, 750);
+  *recvlen = dsock_recv_timeout(s, recvbuf, RECV_BUFF_SIZE, 7500);
   if (*recvlen == 0 || *recvlen == RECV_BUFF_SIZE) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce recv failure. Did not receive or received too much");
     dsock_close(s);

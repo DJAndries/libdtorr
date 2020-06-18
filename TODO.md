@@ -8,10 +8,8 @@
 * visiblity=hidden
 * bsd sock support for network layer
 * tracker intervals
-* support init for nested dirs
 * keepalives
 * check socket buffer avail before sending
-* connect timeout
 
 ## DONE
 
@@ -30,3 +28,5 @@
 * piece verification
 * choking / interested
 * tcp server
+* connect timeout
+* support init for nested dirs

@@ -22,6 +22,7 @@ void default_log_handler(int log_level, char* msg) {
       break;
   }
   fprintf(stream, "dtorr: [%s]: %s\n", txt_level, msg);
+  fflush(stream);
 }
 
 void dlog(dtorr_config* config, int log_level, char* message, ...) {
