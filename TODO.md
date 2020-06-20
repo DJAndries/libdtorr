@@ -6,7 +6,6 @@
   * torrent
 * dht
 * visiblity=hidden
-* bsd sock support for network layer
 * tracker intervals
 * keepalives
 * check socket buffer avail before sending
@@ -30,3 +29,4 @@
 * tcp server
 * connect timeout
 * support init for nested dirs
+* bsd sock support for network layer

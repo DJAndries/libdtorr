@@ -4,6 +4,7 @@
 #include "close.h"
 #include "log.h"
 #include "util.h"
+#include <stdlib.h>
 #include <string.h>
 
 int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer) {

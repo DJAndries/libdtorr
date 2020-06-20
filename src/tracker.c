@@ -7,6 +7,7 @@
 #include "peer.h"
 #include "util.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define RECV_BUFF_SIZE 256 * 1024
@@ -180,6 +181,8 @@ int tracker_announce(dtorr_config* config, char* uri, dtorr_torrent* torrent) {
   parsed_uri* parsed = parse_uri(uri);
   char recvbuf[RECV_BUFF_SIZE];
   unsigned long long recvlen;
+
+  dlog(config, LOG_LEVEL_INFO, "Tracker announce with ip %s and port %u", torrent->me.ip, torrent->me.port);
 
   if (parsed == 0) {
     dlog(config, LOG_LEVEL_ERROR, "Tracker announce failed to parse uri: %s", uri);

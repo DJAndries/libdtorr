@@ -2,6 +2,7 @@
 #include "dsock.h"
 #include "list.h"
 #include "log.h"
+#include <stdlib.h>
 #include <string.h>
 
 void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, char bad) {

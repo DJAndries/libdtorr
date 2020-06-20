@@ -4,7 +4,7 @@
 #include "dtorr/metadata.h"
 #include "util.h"
 
-#define TORRENT_COUNT 2
+#define TORRENT_COUNT 3
 
 void print_files(dtorr_torrent* torrent) {
   unsigned long long i;

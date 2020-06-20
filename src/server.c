@@ -1,3 +1,4 @@
+#include <string.h>
 #include "dtorr/server.h"
 #include "dsock.h"
 #include "handshake.h"
@@ -20,8 +21,15 @@ int peer_server_accept(dtorr_config* config) {
   sockaddr_in conn_info;
   unsigned short conn_port;
   char* conn_ip;
+  int errno_result;
+  socklen_t conn_info_sz = sizeof(conn_info);
 
-  if ((conn_sock = accept(config->serv_sock, (sockaddr*)&conn_info, 0)) == INVALID_SOCKET) {
+  if ((conn_sock = accept(config->serv_sock, (sockaddr*)&conn_info, &conn_info_sz)) == INVALID_SOCKET) {
+    errno_result = dsock_errno();
+    if (errno_result != EAGAIN && errno_result != EWOULDBLOCK) {
+      dlog(config, LOG_LEVEL_ERROR, "Error accepting connection: %s", strerror(errno_result));
+      return 2;
+    }
     return 0;
   }
 
@@ -29,6 +37,7 @@ int peer_server_accept(dtorr_config* config) {
   conn_ip = inet_ntoa(conn_info.sin_addr);
 
   if (dsock_set_sock_nonblocking(conn_sock) != 0) {
+    dlog(config, LOG_LEVEL_ERROR, "Failed to set socket as nonblocking");
     return 1;
   }
 

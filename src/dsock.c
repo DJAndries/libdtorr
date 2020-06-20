@@ -18,7 +18,7 @@ int dsock_init() {
   #endif
 }
 
-static int dsock_errno() {
+int dsock_errno() {
   #if _WIN32
     return WSAGetLastError();
   #else

@@ -310,9 +310,6 @@ dtorr_torrent* load_torrent_metadata(dtorr_config* config, char* data, unsigned 
 void free_torrent(dtorr_torrent* torrent) {
   unsigned long long i;
   /* free nodes for "decoded" (if exists), will clear the rest */
-  if (torrent->infohash != 0) {
-    free(torrent->infohash);
-  }
   if (torrent->bitfield != 0) {
     free(torrent->bitfield);
   }

@@ -2,6 +2,7 @@
 #include "log.h"
 #include "util.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -10,6 +11,9 @@
 #else
 #define _FILE_OFFSET_BITS 64
 #define lfseek fseeko
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #define ALLOC_BUF_SIZE 16 * 1024 * 1024
@@ -37,9 +41,9 @@ static char* convert_os_dir(char* dir) {
   if (result == 0) {
     return 0;
   }
-  char* current_char;
   strcpy(result, dir);
   #ifdef _WIN32
+    char* current_char;
     current_char = strchr(result, '/');
     while (current_char != 0) {
       *current_char = '\\';
@@ -49,6 +53,7 @@ static char* convert_os_dir(char* dir) {
   return result;
 }
 
+#ifdef _WIN32
 static short unsigned int* create_wide_path(char* path) {
   short unsigned int* wide_path;
   unsigned long long wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, 0, 0);
@@ -66,6 +71,7 @@ static short unsigned int* create_wide_path(char* path) {
   }
   return wide_path;
 }
+#endif
 
 static int create_dir(char* path) {
   #ifdef _WIN32
@@ -85,6 +91,12 @@ static int create_dir(char* path) {
     }
     return result == 0 ? 3 : 0;
   #else
+    struct stat st = {0};
+
+    if (stat(path, &st) == -1) {
+      return mkdir(path, 0700);
+    }
+    return 0;
   #endif
 }
 

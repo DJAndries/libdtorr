@@ -11,8 +11,20 @@
   #define sockaddr_in6 SOCKADDR_IN6
   #define in_addr IN_ADDR
   #define EINPROGRESS WSAEINPROGRESS || WSAEWOULDBLOCK
+  #define socklen_t int
 #else
+  #include <sys/types.h>
   #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+  #include <netdb.h>
+  #include <errno.h>
+  #include <unistd.h>
+  typedef struct addrinfo addrinfo;
+  typedef struct sockaddr_in sockaddr_in;
+  typedef struct sockaddr sockaddr;
+  typedef struct in_addr in_addr;
+  #define SOCKET int
   #define INVALID_SOCKET -1
 #endif
 
@@ -31,5 +43,7 @@ int dsock_recv_timeout(SOCKET s, char* buf, unsigned long long buf_size, unsigne
 SOCKET dsock_close(SOCKET s);
 
 int dsock_clean();
+
+int dsock_errno();
 
 #endif

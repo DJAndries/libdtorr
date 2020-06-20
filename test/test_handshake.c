@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
 #include "dsock.h"

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <string.h>
 #include "dtorr/structs.h"
 #include "dtorr/metadata.h"
