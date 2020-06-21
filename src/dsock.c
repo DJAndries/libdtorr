@@ -70,7 +70,7 @@ static SOCKET connect_helper(char* host, unsigned short port, char* schema) {
 
     if (res == 0) {
       return s;
-    } else if (dsock_errno() == EINPROGRESS) {
+    } else if (dsock_errno() == DEINPROGRESS) {
       if (select(s + 1, 0, &writefds, 0, &timeout) == 1) {
         return s;
       }

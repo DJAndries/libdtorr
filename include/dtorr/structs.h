@@ -1,5 +1,5 @@
-#ifndef BENCODING_H
-#define BENCODING_H
+#ifndef DTORR_STRUCTS_H
+#define DTORR_STRUCTS_H
 
 #define DTORR_DICT 1 /* dtorr_hashmap */
 #define DTORR_STR 2 /* char* */
@@ -7,13 +7,9 @@
 #define DTORR_NUM 4 /* long long */
 
 #ifndef _WIN32
-#ifndef SOCKET
 typedef int SOCKET;
-#endif
 #else
-#ifndef SOCKET
-typedef unsigned SOCKET;
-#endif
+#include <winsock2.h>
 #endif
 
 struct dtorr_node {

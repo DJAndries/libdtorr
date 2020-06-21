@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "dtorr/server.h"
 #include "dsock.h"
@@ -26,7 +27,7 @@ int peer_server_accept(dtorr_config* config) {
 
   if ((conn_sock = accept(config->serv_sock, (sockaddr*)&conn_info, &conn_info_sz)) == INVALID_SOCKET) {
     errno_result = dsock_errno();
-    if (errno_result != EAGAIN && errno_result != EWOULDBLOCK) {
+    if (errno_result != DEAGAIN && errno_result != DEWOULDBLOCK) {
       dlog(config, LOG_LEVEL_ERROR, "Error accepting connection: %s", strerror(errno_result));
       return 2;
     }

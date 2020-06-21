@@ -1,5 +1,5 @@
-#ifndef DSOCK_H
-#define DSOCK_H
+#ifndef DTORR_DSOCK_H
+#define DTORR_DSOCK_H
 
 #include "uri.h"
 #ifdef _WIN32
@@ -10,7 +10,9 @@
   #define sockaddr_in SOCKADDR_IN
   #define sockaddr_in6 SOCKADDR_IN6
   #define in_addr IN_ADDR
-  #define EINPROGRESS WSAEINPROGRESS || WSAEWOULDBLOCK
+  #define DEWOULDBLOCK WSAEWOULDBLOCK
+  #define DEAGAIN WSAEWOULDBLOCK
+  #define DEINPROGRESS WSAEINPROGRESS || WSAEWOULDBLOCK
   #define socklen_t int
 #else
   #include <sys/types.h>
@@ -24,6 +26,9 @@
   typedef struct sockaddr_in sockaddr_in;
   typedef struct sockaddr sockaddr;
   typedef struct in_addr in_addr;
+  #define DEWOULDBLOCK EWOULDBLOCK
+  #define DEAGAIN EAGAIN
+  #define DEINPROGRESS EINPROGRESS
   #define SOCKET int
   #define INVALID_SOCKET -1
 #endif
