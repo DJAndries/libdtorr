@@ -1,5 +1,3 @@
-openssl_lib_dir = ../openssl
-
 SRC = $(wildcard src/*.c)
 SRC_OBJ = $(SRC:src/%.c=obj/%.o)
 
@@ -27,10 +25,10 @@ obj/%.o: test/%.c
 	gcc $(FADD_FLAGS) -Wall -O -c $< -Iinclude -Isrc -o $@
 
 obj/%.o: src/%.c
-	gcc $(FADD_FLAGS) -Wall -O -c $< -Iinclude -I$(openssl_lib_dir)/include -o $@
+	gcc $(FADD_FLAGS) -Wall -O -c $< -Iinclude -o $@
 
 lib/$(LIB_NAME): $(SRC_OBJ)
-	gcc $(FADD_FLAGS) -shared -o ./lib/$(LIB_NAME) $(SRC_OBJ) -L$(openssl_lib_dir)/lib -l:libcrypto.a -l:libssl.a $(ADD_LIB_FLAGS)
+	gcc $(FADD_FLAGS) -shared -o ./lib/$(LIB_NAME) $(SRC_OBJ) -lcrypto -lssl $(ADD_LIB_FLAGS)
 
 lib:
 	mkdir lib
