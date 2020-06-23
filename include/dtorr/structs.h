@@ -60,6 +60,10 @@ struct dtorr_peer {
 
   char* bitfield;
 
+  char* unsent_data;
+  unsigned long long unsent_data_offset;
+  unsigned long long unsent_data_length;
+
   dtorr_listnode* out_piece_requests;
   unsigned long long sent_request_count;
   unsigned long long total_out_request_count;

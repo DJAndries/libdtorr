@@ -23,7 +23,7 @@ int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer
     buf[i / 8 + 1] |= (torrent->bitfield[i] << (7 - (i % 8)));
   }
 
-  if (send_sock_msg(peer->s, buf, compact_len + 1) != 0) {
+  if (send_sock_msg(peer, buf, compact_len + 1) < 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send bitfield");
     return 2;
   }
@@ -34,7 +34,7 @@ int send_bitfield(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer
 int send_interested_status(dtorr_config* config, dtorr_peer* peer, char interested) {
   char buf = interested == 1 ? 2 : 3;
 
-  if (send_sock_msg(peer->s, &buf, 1) != 0) {
+  if (send_sock_msg(peer, &buf, 1) < 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send interested update");
     return 1;
   }
@@ -44,7 +44,7 @@ int send_interested_status(dtorr_config* config, dtorr_peer* peer, char interest
 int send_choked_status(dtorr_config* config, dtorr_peer* peer, char choked) {
   char buf = choked == 1 ? 0 : 1;
 
-  if (send_sock_msg(peer->s, &buf, 1) != 0) {
+  if (send_sock_msg(peer, &buf, 1) < 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send choked update");
     return 1;
   }
@@ -62,7 +62,7 @@ int send_have(dtorr_config* config, dtorr_torrent* torrent, unsigned long long i
   for (it = torrent->active_peers; it != 0; it = next) {
     next = it->next;
     peer = (dtorr_peer*)it->value;
-    if (send_sock_msg(peer->s, buf, 5) != 0) {
+    if (send_sock_msg(peer, buf, 5) < 0) {
       dlog(config, LOG_LEVEL_ERROR, "Failed to send have update");
       peer_close(config, torrent, peer, 0);
     }
@@ -78,7 +78,7 @@ int send_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
   uint_to_bigend(buf + 5, (unsigned int)req->begin);
   uint_to_bigend(buf + 9, (unsigned int)req->length);
 
-  if (send_sock_msg(peer->s, buf, 13) != 0) {
+  if (send_sock_msg(peer, buf, 13) < 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send piece request");
     peer_close(config, torrent, peer, 0);
     return 1;
@@ -101,7 +101,7 @@ int send_piece(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,dt
 
   memcpy(buf + 9, data + req->begin, req->length);
 
-  if (send_sock_msg(peer->s, buf, msg_len) != 0) {
+  if (send_sock_msg(peer, buf, msg_len) < 0) {
     dlog(config, LOG_LEVEL_ERROR, "Failed to send piece");
     peer_close(config, torrent, peer, 0);
     return 2;

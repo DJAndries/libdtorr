@@ -9,6 +9,6 @@ int piece_recv(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer,
 int queue_request(dtorr_config* config, dtorr_peer* peer, unsigned long long index,
                   unsigned long long begin, unsigned long long length);
 
-int pieces_send(dtorr_config* config, dtorr_torrent* torrent);
+int pieces_send(dtorr_config* config, dtorr_peer* peer, dtorr_torrent* torrent);
 
 #endif

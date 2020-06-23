@@ -105,7 +105,7 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
   dtorr_peer* peer;
   char buf[MSG_BUF_SIZE];
   unsigned long long msg_len;
-  int read_result;
+  int read_result, resend_result;
 
   if (interval_tasks(config, torrent) != 0) {
     return 1;
@@ -114,6 +114,23 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
   for (it = torrent->active_peers; it != 0; it = next) {
     next = it->next;
     peer = (dtorr_peer*)it->value;
+
+    if (peer->unsent_data != 0) {
+      dlog(config, LOG_LEVEL_DEBUG, "Attempting resend of unsent data");
+      resend_result = attempt_resend(peer);
+      if (resend_result < 0) {
+        dlog(config, LOG_LEVEL_ERROR, "Failed to resend unsent data");
+        peer_close(config, torrent, peer, 0);
+        continue;
+      } else if (resend_result > 0) {
+        dlog(config, LOG_LEVEL_DEBUG, "Send buffer full, after resend");
+        continue;
+      }
+    } 
+
+    if (pieces_send(config, peer, torrent) < 0) {
+      return 3;
+    }
 
     read_result = extract_sock_msg(peer->s, buf, MSG_BUF_SIZE, &msg_len);
     if (read_result != 0) {
@@ -126,10 +143,6 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
     if (process_msg(config, torrent, peer, buf, msg_len) != 0) {
       peer_close(config, torrent, peer, 1);
     }
-  }
-
-  if (pieces_send(config, torrent) != 0) {
-    return 3;
   }
 
   return 0;

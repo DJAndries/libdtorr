@@ -122,41 +122,37 @@ int queue_request(dtorr_config* config, dtorr_peer* peer, unsigned long long ind
   return 0;
 }
 
-int pieces_send(dtorr_config* config, dtorr_torrent* torrent) {
-  dtorr_listnode *it, *next, *piece_node;
-  dtorr_peer* peer;
+int pieces_send(dtorr_config* config, dtorr_peer* peer, dtorr_torrent* torrent) {
+  dtorr_listnode *piece_node;
   dtorr_piece_request* req;
-  for (it = torrent->active_peers; it != 0; it = next) {
-    next = it->next;
-    peer = (dtorr_peer*)it->value;
 
-    if (peer->in_piece_requests == 0) {
-      continue;
-    }
-    piece_node = peer->in_piece_requests;
-    req = (dtorr_piece_request*)piece_node->value;
-
-    if (peer->curr_in_piece == 0 || peer->curr_in_piece_index != req->index) {
-      if (peer->curr_in_piece != 0) {
-        free(peer->curr_in_piece);
-        peer->curr_in_piece = 0;
-      }
-      if (load_piece_data(config, torrent, peer, req->index) != 0) {
-        return 1;
-      }
-      peer->curr_in_piece_index = req->index;
-    }
-
-    if (send_piece(config, torrent, peer, req, peer->curr_in_piece) != 0) {
-      continue;
-    }
-
-    torrent->uploaded += req->length;
-    torrent->uploaded_interval += req->length;
-
-    peer->in_piece_requests = piece_node->next;
-    free(piece_node);
-    peer->total_in_request_count--;
+  if (peer->in_piece_requests == 0) {
+    return 0;
   }
+  piece_node = peer->in_piece_requests;
+  req = (dtorr_piece_request*)piece_node->value;
+
+  if (peer->curr_in_piece == 0 || peer->curr_in_piece_index != req->index) {
+    if (peer->curr_in_piece != 0) {
+      free(peer->curr_in_piece);
+      peer->curr_in_piece = 0;
+    }
+    if (load_piece_data(config, torrent, peer, req->index) != 0) {
+      return -1;
+    }
+    peer->curr_in_piece_index = req->index;
+  }
+
+  if (send_piece(config, torrent, peer, req, peer->curr_in_piece) != 0) {
+    return 2;
+  }
+
+  torrent->uploaded += req->length;
+  torrent->uploaded_interval += req->length;
+
+  peer->in_piece_requests = piece_node->next;
+  free(piece_node);
+  peer->total_in_request_count--;
+
   return 0;
 }

@@ -1,4 +1,6 @@
 #include "stream.h"
+#include <stdlib.h>
+#include <string.h>
 #include "util.h"
 
 #define TEMP_BUF_SIZE 24 * 1024
@@ -32,18 +34,54 @@ int extract_sock_msg(SOCKET s, char* buf, unsigned long long buf_size, unsigned 
   return 0;
 }
 
-int send_sock_msg(SOCKET s, char* buf, unsigned long long msg_size) {
-  char length_buf[4];
-
-  uint_to_bigend(length_buf, (unsigned int)msg_size);
-
-  if (send(s, length_buf, 4, 0) != 4) {
-    return 1;
+static int handle_send_result(dtorr_peer* peer, char* buf, unsigned long long msg_size, long long send_result) {
+  int errno_result;
+  if ((msg_size - peer->unsent_data_offset) == send_result) {
+    free(buf);
+    peer->unsent_data = (char*)(peer->unsent_data_offset = peer->unsent_data_length = 0);
+    return 0;
   }
 
-  if (send(s, buf, msg_size, 0) != msg_size) {
-    return 2;
+  if (send_result < 0) {
+    errno_result = dsock_errno();
+    if (errno_result != DEAGAIN && errno_result != DEWOULDBLOCK) {
+      free(buf);
+      peer->unsent_data = (char*)(peer->unsent_data_offset = peer->unsent_data_length = 0);
+      return -1;
+    }
   }
 
-  return 0;
+  peer->unsent_data = buf;
+  peer->unsent_data_offset = peer->unsent_data_offset + (send_result < 0 ? 0 : send_result);
+  peer->unsent_data_length = msg_size;
+  return 1;
+}
+
+int attempt_resend(dtorr_peer* peer) {
+  long long send_result;
+  unsigned long long resend_length;
+  if (peer->unsent_data == 0) {
+    return 0;
+  }
+
+  resend_length = peer->unsent_data_length - peer->unsent_data_offset;
+  send_result = send(peer->s, peer->unsent_data + peer->unsent_data_offset, resend_length, 0);
+
+  return handle_send_result(peer, peer->unsent_data, peer->unsent_data_length, send_result);
+}
+
+int send_sock_msg(dtorr_peer* peer, char* buf, unsigned long long msg_size) {
+  long long send_result;
+  char* send_buf = malloc(sizeof(char) * (msg_size + 4));
+
+  if (send_buf == 0) {
+    return -2;
+  }
+
+  uint_to_bigend(send_buf, (unsigned int)msg_size);
+  memcpy(send_buf + 4, buf, msg_size);
+
+  send_result = send(peer->s, send_buf, msg_size + 4, 0);
+
+  return handle_send_result(peer, send_buf, msg_size + 4, send_result);
 }

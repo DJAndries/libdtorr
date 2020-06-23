@@ -18,6 +18,13 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
   peer->active = 0;
   peer->bad = bad;
 
+  if (peer->unsent_data != 0) {
+    free(peer->unsent_data);
+    peer->unsent_data = 0;
+    peer->unsent_data_offset = 0;
+    peer->unsent_data_length = 0;
+  }
+
   peer->we_choked = peer->they_choked = 1;
   peer->they_interested = peer->we_interested = 0;
 
