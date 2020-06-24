@@ -39,6 +39,7 @@ static int handle_request(dtorr_config* config, dtorr_torrent* torrent, dtorr_pe
 
   if (peer->we_choked == 1) {
     /* ignore */
+    dlog(config, LOG_LEVEL_WARN, "Received request when we choked");
     return 2;
   }
 

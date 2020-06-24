@@ -81,7 +81,7 @@ int attempt_resend(dtorr_peer* peer) {
     resend_length = info->length - info->offset;
     send_result = send(peer->s, info->buf + info->offset, resend_length, 0);
 
-    if ((info->length - info->offset) == send_result) {
+    if (resend_length == send_result) {
       /* sent the rest of the message. free the buf, and remove from list, continue to next msg */
       free(info->buf);
       list_remove(&peer->unsent_data, info);

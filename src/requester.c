@@ -41,7 +41,7 @@ void interest_update(dtorr_config* config, dtorr_torrent* torrent) {
 
     interest_index = bitfield_interest_index(torrent, peer, 0);
 
-    if (interest_index == -1 && peer->we_interested == 1) {
+    if (interest_index == -1 && peer->we_interested == 1 && peer->out_piece_requests == 0) {
       interested = 0;
     } else if (interest_index != -1 && peer->we_interested == 0) {
       interested = 1;
