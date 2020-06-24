@@ -2,6 +2,7 @@
 #include "dsock.h"
 #include "list.h"
 #include "log.h"
+#include "stream.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,10 +20,8 @@ void peer_close(dtorr_config* config, dtorr_torrent* torrent, dtorr_peer* peer, 
   peer->bad = bad;
 
   if (peer->unsent_data != 0) {
-    free(peer->unsent_data);
-    peer->unsent_data = 0;
-    peer->unsent_data_offset = 0;
-    peer->unsent_data_length = 0;
+    clean_unsent_info(peer);
+    peer->unsent_data_count = 0;
   }
 
   peer->we_choked = peer->they_choked = 1;

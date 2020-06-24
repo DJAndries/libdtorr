@@ -128,7 +128,7 @@ int manage_torrent(dtorr_config* config, dtorr_torrent* torrent) {
       }
     } 
 
-    if (pieces_send(config, peer, torrent) < 0) {
+    if (pieces_send(config, peer, torrent) != 0) {
       return 3;
     }
 

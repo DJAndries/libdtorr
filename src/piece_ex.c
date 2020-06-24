@@ -144,7 +144,7 @@ int pieces_send(dtorr_config* config, dtorr_peer* peer, dtorr_torrent* torrent) 
   }
 
   if (send_piece(config, torrent, peer, req, peer->curr_in_piece) != 0) {
-    return 2;
+    return -2;
   }
 
   torrent->uploaded += req->length;
